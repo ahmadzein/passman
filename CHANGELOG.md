@@ -79,4 +79,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windsurf
 - Any MCP client supporting stdio transport
 
-[0.0.1]: https://github.com/AhmadZein/passman/releases/tag/v0.0.1
+[0.0.1]: https://github.com/ahmadzein/passman/releases/tag/v0.0.1

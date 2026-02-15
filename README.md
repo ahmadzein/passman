@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/Rust-1.75%2B-orange.svg)](https://www.rust-lang.org/)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://modelcontextprotocol.io/)
-[![Version](https://img.shields.io/badge/version-0.0.1-green.svg)](https://github.com/AhmadZein/passman/releases/tag/v0.0.1)
+[![Version](https://img.shields.io/badge/version-0.0.1-green.svg)](https://github.com/ahmadzein/passman/releases/tag/v0.0.1)
 
 **Let AI agents *use* your credentials without ever *seeing* them.**
 
@@ -122,13 +122,19 @@ Tauri v2 + React app for visual credential management:
 ### Install
 
 ```bash
-# Clone and build
-git clone https://github.com/AhmadZein/passman.git
+# One command — downloads pre-built binary, no Rust required
+curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash
+```
+
+Or build from source:
+```bash
+git clone https://github.com/ahmadzein/passman.git
 cd passman
 cargo build --release -p passman-mcp-server
-
-# Binary is at target/release/passman-mcp-server
+cp target/release/passman-mcp-server ~/.local/bin/
 ```
+
+> **AI-readable reference:** See [`skill.md`](skill.md) for the complete tool reference optimized for AI agents.
 
 ### Configure Your AI Client
 
@@ -136,7 +142,7 @@ cargo build --release -p passman-mcp-server
 <summary><strong>Claude Code</strong></summary>
 
 ```bash
-claude mcp add --transport stdio passman -- /path/to/passman-mcp-server
+claude mcp add --transport stdio passman -- ~/.local/bin/passman-mcp-server
 ```
 
 Or add to `.mcp.json`:
@@ -144,7 +150,7 @@ Or add to `.mcp.json`:
 {
   "mcpServers": {
     "passman": {
-      "command": "/path/to/passman-mcp-server",
+      "command": "~/.local/bin/passman-mcp-server",
       "args": [],
       "transport": "stdio"
     }
@@ -161,7 +167,7 @@ In Cursor settings > MCP Servers:
 {
   "mcpServers": {
     "passman": {
-      "command": "/path/to/passman-mcp-server"
+      "command": "~/.local/bin/passman-mcp-server"
     }
   }
 }
@@ -177,7 +183,7 @@ In `.vscode/mcp.json`:
   "servers": {
     "passman": {
       "type": "stdio",
-      "command": "/path/to/passman-mcp-server"
+      "command": "~/.local/bin/passman-mcp-server"
     }
   }
 }
@@ -192,7 +198,7 @@ In `claude_desktop_config.json`:
 {
   "mcpServers": {
     "passman": {
-      "command": "/path/to/passman-mcp-server",
+      "command": "~/.local/bin/passman-mcp-server",
       "args": []
     }
   }
@@ -208,7 +214,7 @@ In MCP configuration:
 {
   "mcpServers": {
     "passman": {
-      "command": "/path/to/passman-mcp-server",
+      "command": "~/.local/bin/passman-mcp-server",
       "args": []
     }
   }
@@ -343,7 +349,7 @@ Contributions welcome! Please open an issue first to discuss what you'd like to 
 
 ```bash
 # Development setup
-git clone https://github.com/AhmadZein/passman.git
+git clone https://github.com/ahmadzein/passman.git
 cd passman
 cargo build
 cargo test --workspace
@@ -361,6 +367,6 @@ cargo test --workspace
 
 **Built with Rust. Secured by design. Open source forever.**
 
-[Report Bug](https://github.com/AhmadZein/passman/issues) | [Request Feature](https://github.com/AhmadZein/passman/issues)
+[Report Bug](https://github.com/ahmadzein/passman/issues) | [Request Feature](https://github.com/ahmadzein/passman/issues)
 
 </div>

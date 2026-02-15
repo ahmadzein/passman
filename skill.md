@@ -4,6 +4,30 @@ Passman is an encrypted credential vault and proxy. It stores credentials locall
 
 ---
 
+## Installation
+
+```bash
+# One command — downloads pre-built binary, no Rust required
+curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash
+
+# Then add to your AI client:
+claude mcp add --transport stdio passman -- ~/.local/bin/passman-mcp-server
+```
+
+Or add to `.mcp.json` in your project:
+```json
+{
+  "mcpServers": {
+    "passman": {
+      "command": "~/.local/bin/passman-mcp-server",
+      "args": []
+    }
+  }
+}
+```
+
+---
+
 ## Quick Start
 
 1. **Unlock the vault** with `vault_unlock` (creates a new vault on first use)
