@@ -10,7 +10,7 @@ use std::collections::HashMap;
 pub struct CredentialStoreRequest {
     #[schemars(description = "Human-readable name for the credential")]
     pub name: String,
-    #[schemars(description = "Credential kind: password, api_token, ssh_key, database_connection, certificate, smtp_account, custom")]
+    #[schemars(description = "Credential kind: password, api_token, ssh_key, ssh_password, database_connection, certificate, smtp_account, custom")]
     pub kind: String,
     #[schemars(description = "Environment: local, development, staging, production")]
     pub environment: String,
@@ -106,6 +106,18 @@ fn parse_secret(
                 port,
                 private_key,
                 passphrase,
+            })
+        }
+        CredentialKind::SshPassword => {
+            let username = get_str(obj, "username")?;
+            let host = get_str(obj, "host")?;
+            let port = obj.get("port").and_then(|v| v.as_u64()).unwrap_or(22) as u16;
+            let password = get_str(obj, "password")?;
+            Ok(CredentialSecret::SshPassword {
+                username,
+                host,
+                port,
+                password,
             })
         }
         CredentialKind::DatabaseConnection => {

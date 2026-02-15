@@ -11,6 +11,7 @@ pub enum CredentialKind {
     Password,
     ApiToken,
     SshKey,
+    SshPassword,
     DatabaseConnection,
     Certificate,
     SmtpAccount,
@@ -23,6 +24,7 @@ impl std::fmt::Display for CredentialKind {
             Self::Password => write!(f, "password"),
             Self::ApiToken => write!(f, "api_token"),
             Self::SshKey => write!(f, "ssh_key"),
+            Self::SshPassword => write!(f, "ssh_password"),
             Self::DatabaseConnection => write!(f, "database_connection"),
             Self::Certificate => write!(f, "certificate"),
             Self::SmtpAccount => write!(f, "smtp_account"),
@@ -118,6 +120,13 @@ pub enum CredentialSecret {
         private_key: String,
         passphrase: Option<String>,
     },
+    SshPassword {
+        username: String,
+        host: String,
+        #[serde(default = "default_ssh_port")]
+        port: u16,
+        password: String,
+    },
     DatabaseConnection {
         driver: DbDriver,
         host: String,
@@ -166,6 +175,7 @@ impl CredentialSecret {
                 }
                 v
             }
+            Self::SshPassword { password, .. } => vec![password.clone()],
             Self::DatabaseConnection { password, .. } => vec![password.clone()],
             Self::Certificate {
                 cert_pem, key_pem, ..

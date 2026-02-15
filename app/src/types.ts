@@ -2,6 +2,7 @@ export type CredentialKind =
   | "password"
   | "api_token"
   | "ssh_key"
+  | "ssh_password"
   | "database_connection"
   | "certificate"
   | "smtp_account"
@@ -75,6 +76,14 @@ export interface SshKeySecret {
   passphrase?: string;
 }
 
+export interface SshPasswordSecret {
+  type: "ssh_password";
+  username: string;
+  host: string;
+  port: number;
+  password: string;
+}
+
 export interface DatabaseConnectionSecret {
   type: "database_connection";
   driver: "postgres" | "mysql" | "sqlite";
@@ -111,6 +120,7 @@ export type CredentialSecret =
   | PasswordSecret
   | ApiTokenSecret
   | SshKeySecret
+  | SshPasswordSecret
   | DatabaseConnectionSecret
   | CertificateSecret
   | SmtpAccountSecret
@@ -120,6 +130,7 @@ export const CREDENTIAL_KINDS: { value: CredentialKind; label: string }[] = [
   { value: "password", label: "Password" },
   { value: "api_token", label: "API Token" },
   { value: "ssh_key", label: "SSH Key" },
+  { value: "ssh_password", label: "SSH Password" },
   { value: "database_connection", label: "Database" },
   { value: "certificate", label: "Certificate" },
   { value: "smtp_account", label: "SMTP Account" },

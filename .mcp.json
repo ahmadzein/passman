@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "passman": {
+      "command": "/Users/ahmadzein/github/passman/target/debug/passman-mcp-server",
+      "args": [],
+      "transport": "stdio"
+    }
+  }
+}

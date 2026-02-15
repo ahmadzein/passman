@@ -51,6 +51,12 @@ pub async fn execute(
             Some(private_key.clone()),
             passphrase.clone(),
         ),
+        CredentialSecret::SshPassword {
+            username,
+            host,
+            port,
+            password,
+        } => (username.clone(), host.clone(), *port, None, Some(password.clone())),
         CredentialSecret::Password {
             username, password, url, ..
         } => {

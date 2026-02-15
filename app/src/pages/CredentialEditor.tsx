@@ -82,6 +82,14 @@ export function CredentialEditor({ onSaved }: CredentialEditorProps) {
           private_key: secret.private_key || "",
           passphrase: secret.passphrase || undefined,
         };
+      case "ssh_password":
+        return {
+          type: "ssh_password",
+          username: secret.username || "",
+          host: secret.host || "",
+          port: parseInt(secret.port || "22", 10),
+          password: secret.password || "",
+        };
       case "database_connection":
         return {
           type: "database_connection",
@@ -293,6 +301,15 @@ function SecretFields({
             />
           </div>
           <Field label="Passphrase" field="passphrase" secret={secret} onChange={onChange} type="password" />
+        </>
+      );
+    case "ssh_password":
+      return (
+        <>
+          <Field label="Username" field="username" secret={secret} onChange={onChange} />
+          <Field label="Host" field="host" secret={secret} onChange={onChange} />
+          <Field label="Port" field="port" secret={secret} onChange={onChange} placeholder="22" />
+          <Field label="Password" field="password" secret={secret} onChange={onChange} type="password" />
         </>
       );
     case "database_connection":

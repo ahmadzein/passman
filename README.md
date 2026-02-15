@@ -1,97 +1,162 @@
+<div align="center">
+
 # Passman
 
-**Secure Credential Proxy MCP Server + Desktop GUI**
+### Secure Credential Proxy for AI Agents
 
-Passman lets AI agents *use* your credentials (SSH, SQL, HTTP APIs, SMTP) without ever *seeing* them. Credentials are encrypted locally with AES-256-GCM, and a proxy pattern ensures raw secrets never appear in LLM context.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Rust](https://img.shields.io/badge/Rust-1.75%2B-orange.svg)](https://www.rust-lang.org/)
+[![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://modelcontextprotocol.io/)
+[![Version](https://img.shields.io/badge/version-0.0.1-green.svg)](https://github.com/AhmadZein/passman/releases/tag/v0.0.1)
+
+**Let AI agents *use* your credentials without ever *seeing* them.**
+
+SSH into servers. Query databases. Call APIs. Send emails.
+All without exposing a single password, key, or token to the LLM.
+
+[Website](https://ahmadzein.github.io/passman) | [Documentation](https://ahmadzein.github.io/passman) | [Changelog](CHANGELOG.md)
+
+</div>
+
+---
+
+## The Problem
+
+Every MCP server that handles credentials today either **exposes secrets to the AI** or is **limited to a single protocol**. There is no unified, secure, multi-protocol credential proxy.
+
+## The Solution
+
+Passman is an **encrypted local vault** + **credential proxy** that sits between AI agents and your infrastructure. The AI references credentials by name. Passman injects them server-side. The AI gets results back -- with secrets scrubbed from every response.
+
+```
+  AI Agent                    Passman                     Your Infrastructure
+ ┌─────────┐               ┌──────────┐               ┌─────────────────────┐
+ │ "Query   │  credential   │ Decrypt  │  inject auth  │                     │
+ │  prod-db │ ────by ID───> │ + Proxy  │ ────────────> │  PostgreSQL / SSH   │
+ │  for     │               │ + Scrub  │               │  API / SMTP Server  │
+ │  users"  │ <──sanitized─ │  output  │ <──response── │                     │
+ └─────────┘    response    └──────────┘               └─────────────────────┘
+                                │
+                  AI never sees │ passwords, keys,
+                                │ tokens, or secrets
+```
+
+---
 
 ## Features
 
-- **14 MCP tools** — vault management, credential discovery, and protocol proxies
-- **Proxy pattern** — credentials injected server-side, never returned to the AI
-- **Multi-protocol** — HTTP, SSH, SQL (Postgres/MySQL/SQLite), SMTP
-- **Output sanitization** — multi-encoding scrub (raw, base64, URL-encoded, hex)
-- **Per-credential policies** — URL patterns, command allow-lists, SQL read-only, rate limits
-- **Encrypted vault** — AES-256-GCM with Argon2id key derivation (64 MiB, 3 iterations)
-- **Desktop GUI** — Tauri v2 + React for credential management
-- **Audit trail** — every proxy call logged with timestamp, credential, tool, success/failure
-- **File-watcher sync** — GUI and MCP server share the vault file, auto-reload on changes
+### Multi-Protocol Proxy
+| Protocol | Tool | What It Does |
+|----------|------|-------------|
+| **HTTP** | `http_request` | REST API calls with Bearer tokens, Basic auth, or mTLS certificates |
+| **SSH** | `ssh_exec` | Remote command execution with SSH keys or passwords |
+| **SQL** | `sql_query` | Database queries on PostgreSQL, MySQL, SQLite |
+| **SMTP** | `send_email` | Send emails via any SMTP server |
 
-## Architecture
+### Encrypted Vault
+- **AES-256-GCM** authenticated encryption per credential
+- **Argon2id** key derivation (64 MiB memory, 3 iterations, 4 parallelism)
+- Unique random nonces per credential
+- Encryption key zeroed from memory on lock via `zeroize`
+
+### 8 Credential Types
+| Type | Use Case |
+|------|----------|
+| Password | Web logins, Basic auth |
+| API Token | Bearer tokens, API keys |
+| SSH Key | Public key authentication |
+| SSH Password | Password-based SSH |
+| Database Connection | PostgreSQL, MySQL, SQLite |
+| Certificate | mTLS, client certificates |
+| SMTP Account | Email sending |
+| Custom | Any key-value secret |
+
+### Output Sanitization
+Every proxy response is scrubbed of credential values across **6 encoding variants** before reaching the AI:
+- Raw string, Base64 (standard + URL-safe), URL-encoded, Hex (lower + upper)
+
+### Policy Engine
+Per-credential rules to restrict what the AI can do:
+- **URL patterns** -- `https://api.github.com/*`
+- **SSH command patterns** -- `ls *`, `cat *` (block dangerous commands)
+- **SQL read-only mode** -- blocks INSERT, UPDATE, DELETE, DROP
+- **SMTP recipient restrictions** -- `*@company.com`
+- **Rate limiting** -- sliding window per credential
+
+### Environment Categories
+Organize credentials by: `local` | `development` | `staging` | `production`
+
+### Audit Trail
+Every operation logged to `~/.passman/audit.jsonl`:
+- Timestamp, credential used, tool called, success/failure, command details
+
+### Desktop GUI
+Tauri v2 + React app for visual credential management:
+- Unlock screen with vault creation
+- Credential browser with filtering
+- Type-specific credential editors
+- Policy configuration
+- Audit log viewer
+
+---
+
+## Security Model
 
 ```
-passman/
-├── crates/
-│   ├── passman-types/       # Shared types (CredentialKind, Secret, Policy, etc.)
-│   ├── passman-vault/       # Encrypted vault: crypto, CRUD, audit, file watcher
-│   ├── passman-proxy/       # Protocol proxies + output sanitizer
-│   └── passman-mcp/         # MCP server (rmcp), 14 tools, policy engine
-├── bins/
-│   └── passman-mcp-server/  # Standalone MCP binary (stdio transport)
-├── app/                     # Tauri v2 + React desktop app
-└── tests/                   # Integration tests
+┌─────────────────────────────────────────────────────────┐
+│                    6 LAYERS OF DEFENSE                   │
+├─────────────────────────────────────────────────────────┤
+│ 1. NO RAW SECRET ACCESS   No tool returns secret values │
+│ 2. OUTPUT SANITIZATION     6 encoding variants scrubbed │
+│ 3. POLICY ENGINE          Per-credential allow/deny     │
+│ 4. RATE LIMITING          Sliding window per credential │
+│ 5. AUDIT TRAIL            Every operation logged        │
+│ 6. MEMORY SAFETY          zeroize-on-drop for all keys  │
+└─────────────────────────────────────────────────────────┘
 ```
+
+---
 
 ## Quick Start
 
-### Prerequisites
-
-- [Rust](https://rustup.rs/) 1.75+
-- [Node.js](https://nodejs.org/) 18+
-- System dependencies for Tauri (see [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/))
-
-### Build the MCP Server
+### Install
 
 ```bash
+# Clone and build
+git clone https://github.com/AhmadZein/passman.git
+cd passman
 cargo build --release -p passman-mcp-server
+
+# Binary is at target/release/passman-mcp-server
 ```
 
-The binary is at `target/release/passman-mcp-server`.
+### Configure Your AI Client
+
+<details>
+<summary><strong>Claude Code</strong></summary>
 
 ```bash
-# Verify it works
-./target/release/passman-mcp-server --version
-# passman-mcp-server 0.1.0
+claude mcp add --transport stdio passman -- /path/to/passman-mcp-server
 ```
 
-### Build the Desktop App
-
-```bash
-cd app
-npm install
-npm run tauri build
-```
-
-### Run in Development
-
-```bash
-# Terminal 1: Run the desktop app
-cd app
-npm run tauri dev
-
-# The MCP server runs separately via your AI client config
-```
-
-## MCP Client Configuration
-
-### Claude Code
-
-Add to your MCP settings (`~/.claude/settings.json` or project `.mcp.json`):
-
+Or add to `.mcp.json`:
 ```json
 {
   "mcpServers": {
     "passman": {
       "command": "/path/to/passman-mcp-server",
-      "args": []
+      "args": [],
+      "transport": "stdio"
     }
   }
 }
 ```
+</details>
 
-### Cursor
+<details>
+<summary><strong>Cursor</strong></summary>
 
-In Cursor settings, add an MCP server:
-
+In Cursor settings > MCP Servers:
 ```json
 {
   "mcpServers": {
@@ -101,11 +166,12 @@ In Cursor settings, add an MCP server:
   }
 }
 ```
+</details>
 
-### VS Code (Copilot)
+<details>
+<summary><strong>VS Code (Copilot)</strong></summary>
 
 In `.vscode/mcp.json`:
-
 ```json
 {
   "servers": {
@@ -116,119 +182,185 @@ In `.vscode/mcp.json`:
   }
 }
 ```
+</details>
 
-## MCP Tools
+<details>
+<summary><strong>Claude Desktop</strong></summary>
 
-### Vault Management
+In `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "passman": {
+      "command": "/path/to/passman-mcp-server",
+      "args": []
+    }
+  }
+}
+```
+</details>
 
-| Tool | Description |
-|------|-------------|
-| `vault_unlock` | Unlock the vault with master password |
-| `vault_lock` | Lock the vault, zero key from memory |
-| `vault_status` | Check lock state, credential count, environments |
+<details>
+<summary><strong>Windsurf</strong></summary>
 
-### Credential Discovery (never returns secrets)
+In MCP configuration:
+```json
+{
+  "mcpServers": {
+    "passman": {
+      "command": "/path/to/passman-mcp-server",
+      "args": []
+    }
+  }
+}
+```
+</details>
 
-| Tool | Description |
-|------|-------------|
-| `credential_list` | List credentials with optional kind/environment/tag filters |
-| `credential_search` | Search credentials by name, tags, notes |
-| `credential_info` | Get metadata for a credential (no secret) |
+### Use It
 
-### Credential Storage
+```
+You:  "Unlock my vault"
+AI:   vault_unlock({password: "..."}) → Vault unlocked. 5 credentials.
 
-| Tool | Description |
-|------|-------------|
-| `credential_store` | Store a new credential (7 types supported) |
-| `credential_delete` | Delete a credential (requires confirmation) |
+You:  "List my credentials"
+AI:   credential_list() → [{name: "GitHub Token", kind: "api_token"}, ...]
 
-### Protocol Proxies (credential never exposed to AI)
+You:  "Use my GitHub token to check my repos"
+AI:   http_request({credential_id: "abc-123", method: "GET", url: "https://api.github.com/user/repos"})
+      → {status: 200, body: [{name: "my-project", ...}]}
+      // Token was injected server-side. AI never saw it.
 
-| Tool | Description |
-|------|-------------|
-| `http_request` | Make HTTP request with stored API token/password |
-| `ssh_exec` | Execute SSH command with stored key/password |
-| `sql_query` | Run SQL query with stored database credentials |
-| `send_email` | Send email with stored SMTP credentials |
+You:  "SSH into prod and check nginx status"
+AI:   ssh_exec({credential_id: "def-456", command: "systemctl status nginx"})
+      → {exit_code: 0, stdout: "● nginx.service - active (running)..."}
+      // Password/key never exposed.
+```
 
-### Audit
+---
 
-| Tool | Description |
-|------|-------------|
-| `audit_log` | View proxy usage history |
+## 14 MCP Tools
 
-## Credential Types
+| Category | Tool | Description |
+|----------|------|-------------|
+| **Vault** | `vault_unlock` | Unlock vault with master password |
+| | `vault_lock` | Lock vault, zero key from memory |
+| | `vault_status` | Check vault state |
+| **Discovery** | `credential_list` | List credentials (filterable) |
+| | `credential_search` | Search by name, tags, notes |
+| | `credential_info` | Get credential metadata (no secret) |
+| **Storage** | `credential_store` | Store a new credential |
+| | `credential_delete` | Delete a credential |
+| **Proxies** | `http_request` | Authenticated HTTP request |
+| | `ssh_exec` | SSH command execution |
+| | `sql_query` | Database query (Postgres/MySQL/SQLite) |
+| | `send_email` | Send email via SMTP |
+| **Audit** | `audit_log` | View usage history |
 
-| Type | Fields |
-|------|--------|
-| Password | username, password, url |
-| API Token | token, header_name, prefix |
-| SSH Key | username, host, port, private_key, passphrase |
-| Database | driver, host, port, database, username, password |
-| Certificate | cert_pem, key_pem, ca_pem |
-| SMTP Account | host, port, username, password, encryption |
-| Custom | arbitrary key-value fields |
+---
 
-## Security Model
+## Architecture
 
-### 6 Layers of Protection
+```
+passman/
+├── crates/
+│   ├── passman-types/       # Shared types, enums, traits
+│   ├── passman-vault/       # Encrypted vault: crypto, CRUD, audit
+│   ├── passman-proxy/       # Protocol proxies + output sanitizer
+│   └── passman-mcp/         # MCP server (rmcp), 14 tools, policy engine
+├── bins/
+│   └── passman-mcp-server/  # Standalone MCP binary (stdio transport)
+├── app/                     # Tauri v2 + React desktop app
+└── skill.md                 # AI-readable feature reference
+```
 
-1. **No raw secret access** — No MCP tool returns credential secret values
-2. **Output sanitization** — All proxy responses scrubbed of secret values across multiple encodings (raw, base64, URL-encoded, hex uppercase/lowercase)
-3. **Policy engine** — Per-credential allow/deny rules, URL patterns, command patterns
-4. **Rate limiting** — Sliding window per credential
-5. **Audit trail** — Every proxy call logged
-6. **Memory safety** — Encryption key uses `zeroize`-on-drop wrapper
+### Tech Stack
 
-### Cryptography
-
-| Component | Algorithm |
+| Component | Technology |
 |-----------|-----------|
-| Encryption | AES-256-GCM (per-credential unique nonces) |
-| Key Derivation | Argon2id (64 MiB memory, 3 iterations, 4 parallelism) |
-| Key Storage | In-memory only, zeroed on lock/drop |
+| Language | Rust |
+| MCP SDK | rmcp 0.15+ |
+| Encryption | aes-gcm + argon2 |
+| HTTP Proxy | reqwest |
+| SSH Proxy | russh |
+| SQL Proxy | sqlx (any driver) |
+| SMTP Proxy | lettre |
+| Desktop GUI | Tauri v2 + React |
+| Memory Safety | zeroize + secrecy |
 
-### Vault File
+---
 
-- Location: `~/.passman/vault.json`
-- Metadata stored in plaintext (searchable)
-- Each credential's secret independently encrypted
-- Audit log: `~/.passman/audit.jsonl` (append-only JSONL)
+## Desktop GUI
 
-## Example Usage with AI
+Build and run the Tauri desktop app:
 
+```bash
+cd app
+npm install
+npm run tauri dev     # Development
+npm run tauri build   # Production build
 ```
-User: "List my credentials"
-AI calls: credential_list() → [{name: "GitHub Token", kind: "api_token", ...}]
 
-User: "Use my GitHub token to check my repos"
-AI calls: http_request({
-  credential_id: "abc-123",
-  method: "GET",
-  url: "https://api.github.com/user/repos"
-}) → {status: 200, body: [{name: "my-repo", ...}]}
-// The AI never sees the token — it was injected server-side
-```
+Screens: Unlock | Vault Browser | Credential Editor | Policy Editor | Audit Log | Settings
+
+---
 
 ## Running Tests
 
 ```bash
-# All unit tests (28 tests)
-cargo test --workspace
-
-# Integration tests (vault lifecycle + cross-process reload)
-cargo test -p passman-vault --test lifecycle
+cargo test --workspace         # All unit tests
 ```
 
-## Project Status
+---
 
-- [x] Phase 1: Vault foundation (crypto, storage, CRUD, audit)
-- [x] Phase 2: MCP server (14 tools via rmcp)
-- [x] Phase 3: Protocol proxies (HTTP, SSH, SQL, SMTP) + sanitizer
-- [x] Phase 4: Desktop GUI (Tauri v2 + React, 6 screens)
-- [x] Phase 5: Integration (file-watcher, policy CRUD, CLI flags, tests)
-- [x] Phase 6: Documentation
+## File Locations
+
+| File | Purpose |
+|------|---------|
+| `~/.passman/vault.json` | Encrypted credential vault |
+| `~/.passman/audit.jsonl` | Append-only audit log |
+
+---
+
+## Why Passman?
+
+| | Passman | Janee | mcp-secrets-vault | 1Password `op run` | Google Toolbox |
+|---|---|---|---|---|---|
+| **Protocols** | HTTP + SSH + SQL + SMTP | HTTP only | HTTP (GET/POST only) | Env vars only | SQL only |
+| **Credential proxy** | Full proxy | HTTP proxy | HTTP proxy | Env injection | SQL proxy |
+| **Encrypted vault** | AES-256-GCM | AES-256-GCM | Env vars only | 1Password vault | Config file |
+| **Output sanitization** | 6 encodings | Basic (8+ chars) | Basic | stdout masking | None |
+| **Self-hosted** | Yes (local-first) | Yes | Yes | Requires 1Password | Google Cloud bias |
+| **Desktop GUI** | Tauri + React | No | No | 1Password app | No |
+| **Open source** | MIT | MIT | MIT | Proprietary | Apache 2.0 |
+| **Policy engine** | Per-credential rules | Per-capability | Per-secret domain | None | DB permissions |
+| **Cost** | Free | Free | Free | $3-8/mo | Free |
+
+---
+
+## Contributing
+
+Contributions welcome! Please open an issue first to discuss what you'd like to change.
+
+```bash
+# Development setup
+git clone https://github.com/AhmadZein/passman.git
+cd passman
+cargo build
+cargo test --workspace
+```
+
+---
 
 ## License
 
-MIT
+[MIT](LICENSE) - Use it, fork it, build on it.
+
+---
+
+<div align="center">
+
+**Built with Rust. Secured by design. Open source forever.**
+
+[Report Bug](https://github.com/AhmadZein/passman/issues) | [Request Feature](https://github.com/AhmadZein/passman/issues)
+
+</div>
