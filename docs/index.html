@@ -1128,67 +1128,73 @@ a:hover{color:var(--cyan)}
 <!-- ===== INSTALL / QUICK START ===== -->
 <section class="section install" id="install">
   <div class="container">
-    <h2 class="section-title reveal">Quick Start</h2>
-    <p class="section-sub reveal">Up and running in under 2 minutes. Build from source, configure your MCP client, and go.</p>
+    <h2 class="section-title reveal">Installation</h2>
+    <p class="section-sub reveal">Three ways to install. Pick the one that fits your setup.</p>
 
     <div class="install-grid reveal">
       <div class="install-steps">
         <div class="install-step">
           <div class="install-step-num">1</div>
           <div>
-            <h4>Clone &amp; Build</h4>
-            <p>Requires Rust toolchain. Builds a single binary with all proxy protocols included.</p>
+            <h4>Install Passman</h4>
+            <p>Use the one-line installer, or clone and build manually. Installs the MCP server binary to <code style="color:var(--cyan);background:var(--bg-code);padding:2px 6px;border-radius:4px;font-size:.85em">~/.local/bin/</code></p>
           </div>
         </div>
         <div class="install-step">
           <div class="install-step-num">2</div>
           <div>
-            <h4>Configure MCP Client</h4>
-            <p>Add Passman to your MCP client config. Point it to the built binary. Uses stdio transport.</p>
+            <h4>Add to Your AI Client</h4>
+            <p>Add Passman to your MCP client config (Claude Code, Cursor, VS Code, etc). See configs below.</p>
           </div>
         </div>
         <div class="install-step">
           <div class="install-step-num">3</div>
           <div>
-            <h4>Unlock &amp; Store</h4>
-            <p>Unlock the vault with a master password (creates one on first run), then store your first credential.</p>
+            <h4>Restart Your AI Client</h4>
+            <p>Restart the AI client so it picks up the new MCP server. Passman will be available immediately.</p>
           </div>
         </div>
         <div class="install-step">
           <div class="install-step-num">4</div>
           <div>
-            <h4>Use Via AI Agent</h4>
-            <p>Your AI agent can now proxy HTTP requests, SSH commands, SQL queries, and emails using your stored credentials &mdash; securely.</p>
+            <h4>Start Using It</h4>
+            <p>Tell your AI: <em>"Unlock my Passman vault"</em>. It creates a new vault on first run. Then store credentials and use them securely.</p>
           </div>
         </div>
       </div>
 
       <div>
-        <div class="code-block" style="margin-bottom:20px">
+        <!-- One-liner installer -->
+        <div class="code-block" style="margin-bottom:16px">
           <div class="code-header">
-            <span>Terminal</span>
-            <button class="code-copy" onclick="copyCode(this)" data-code="git clone https://github.com/AhmadZein/passman.git&#10;cd passman&#10;cargo build --release">Copy</button>
+            <span style="color:var(--green);font-weight:600">Option 1: One-Line Installer (Recommended)</span>
+            <button class="code-copy" onclick="copyCode(this)" data-code="curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash">Copy</button>
           </div>
-          <div class="code-body"><span class="cm"># Clone and build</span>
-<span class="kw">$</span> git clone https://github.com/AhmadZein/passman.git
-<span class="kw">$</span> cd passman
-<span class="kw">$</span> cargo build --release
-
-<span class="cm"># Binary at: target/release/passman-mcp-server</span></div>
+          <div class="code-body"><span class="cm"># Clones, builds, installs to ~/.local/bin/, updates PATH</span>
+<span class="kw">$</span> curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash</div>
         </div>
 
+        <!-- Manual build -->
+        <div class="code-block" style="margin-bottom:16px">
+          <div class="code-header">
+            <span>Option 2: Build from Source</span>
+            <button class="code-copy" onclick="copyCode(this)" data-code="git clone https://github.com/ahmadzein/passman.git&#10;cd passman&#10;cargo build --release -p passman-mcp-server&#10;cp target/release/passman-mcp-server ~/.local/bin/">Copy</button>
+          </div>
+          <div class="code-body"><span class="cm"># Requires Rust toolchain (https://rustup.rs)</span>
+<span class="kw">$</span> git clone https://github.com/ahmadzein/passman.git
+<span class="kw">$</span> cd passman
+<span class="kw">$</span> cargo build --release -p passman-mcp-server
+<span class="kw">$</span> cp target/release/passman-mcp-server ~/.local/bin/</div>
+        </div>
+
+        <!-- Claude Code shortcut -->
         <div class="code-block">
           <div class="code-header">
-            <span>.mcp.json</span>
-            <button class="code-copy" onclick="copyCode(this)" data-code='{"mcpServers":{"passman":{"command":"./target/release/passman-mcp-server"}}}'>Copy</button>
+            <span>Option 3: Claude Code CLI</span>
+            <button class="code-copy" onclick="copyCode(this)" data-code="claude mcp add --transport stdio passman -- ~/.local/bin/passman-mcp-server">Copy</button>
           </div>
-          <div class="code-body">{
-  <span class="key">"mcpServers"</span>: {
-    <span class="key">"passman"</span>: {
-      <span class="key">"command"</span>: <span class="str">"./target/release/passman-mcp-server"</span>
-    }
-  }
-}</div>
+          <div class="code-body"><span class="cm"># After installing the binary, add directly via CLI</span>
+<span class="kw">$</span> claude mcp add --transport stdio passman -- ~/.local/bin/passman-mcp-server</div>
         </div>
       </div>
     </div>
