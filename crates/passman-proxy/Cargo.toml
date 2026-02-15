@@ -1,0 +1,23 @@
+[package]
+name = "passman-proxy"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+passman-types = { workspace = true }
+passman-vault = { workspace = true }
+reqwest = { workspace = true }
+russh = { workspace = true }
+russh-keys = { workspace = true }
+async-trait = { workspace = true }
+sqlx = { workspace = true }
+lettre = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+base64 = { workspace = true }
+urlencoding = { workspace = true }
+hex = { workspace = true }
+regex = { workspace = true }

@@ -1,0 +1,29 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Node
+node_modules/
+app/dist/
+app/.vite/
+
+# Tauri
+app/src-tauri/target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Vault data (never commit secrets!)
+*.json.tmp
+vault.json
+audit.jsonl
+
+# Environment
+.env
+.env.*

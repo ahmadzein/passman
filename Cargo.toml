@@ -1,0 +1,77 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/passman-types",
+    "crates/passman-vault",
+    "crates/passman-proxy",
+    "crates/passman-mcp",
+    "bins/passman-mcp-server",
+]
+exclude = ["app/src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/ahmadzein/passman"
+
+[workspace.dependencies]
+passman-types = { path = "crates/passman-types" }
+passman-vault = { path = "crates/passman-vault" }
+passman-proxy = { path = "crates/passman-proxy" }
+passman-mcp = { path = "crates/passman-mcp" }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Crypto
+aes-gcm = "0.10"
+argon2 = "0.5"
+rand = "0.8"
+
+# Secret handling
+zeroize = { version = "1", features = ["derive"] }
+secrecy = { version = "0.8", features = ["serde"] }
+
+# IDs and timestamps
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# File locking
+fd-lock = "4"
+
+# MCP
+rmcp = { version = "0.15", features = ["server", "transport-io"] }
+schemars = "1.0"
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "native-tls"] }
+
+# SSH
+russh = "0.46"
+russh-keys = "0.46"
+async-trait = "0.1"
+
+# SQL
+sqlx = { version = "0.8", features = ["runtime-tokio", "any", "postgres", "mysql", "sqlite"] }
+
+# SMTP
+lettre = { version = "0.11", default-features = false, features = ["tokio1-rustls-tls", "smtp-transport", "builder"] }
+
+# Error handling
+anyhow = "1"
+thiserror = "2"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Misc
+base64 = "0.22"
+urlencoding = "2"
+hex = "0.4"
+regex = "1"

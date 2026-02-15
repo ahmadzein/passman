@@ -1,0 +1,19 @@
+[package]
+name = "passman-mcp"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+passman-types = { workspace = true }
+passman-vault = { workspace = true }
+passman-proxy = { workspace = true }
+rmcp = { workspace = true }
+schemars = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }

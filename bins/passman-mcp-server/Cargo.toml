@@ -1,0 +1,17 @@
+[package]
+name = "passman-mcp-server"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "passman-mcp-server"
+path = "src/main.rs"
+
+[dependencies]
+passman-mcp = { workspace = true }
+passman-vault = { workspace = true }
+rmcp = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
