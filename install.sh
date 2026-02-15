@@ -3,10 +3,14 @@ set -euo pipefail
 
 # Passman Installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash
+#
+# Downloads a pre-built binary. No Rust, no cargo, no cloning required.
+# Falls back to building from source if no binary is available for your platform.
 
 REPO="ahmadzein/passman"
 BINARY="passman-mcp-server"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
+VERSION="${VERSION:-latest}"
 
 # Colors
 RED='\033[0;31m'
@@ -49,54 +53,62 @@ detect_platform() {
     esac
 
     TARGET="${ARCH}-${PLATFORM}"
+    TARBALL="${BINARY}-${TARGET}.tar.gz"
     info "Detected platform: ${BOLD}${TARGET}${NC}"
 }
 
-check_deps() {
-    if command -v cargo &>/dev/null; then
-        INSTALL_METHOD="cargo"
-        success "Rust/Cargo found"
-    elif command -v git &>/dev/null; then
-        INSTALL_METHOD="source"
-        success "Git found (will build from source)"
+get_download_url() {
+    if [ "$VERSION" = "latest" ]; then
+        DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${TARBALL}"
     else
-        warn "Neither cargo nor git found."
-        warn "Please install Rust: https://rustup.rs/"
-        exit 1
+        DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/${TARBALL}"
     fi
 }
 
-install_cargo() {
-    step "Building from crates.io / source..."
+install_binary() {
+    step "Downloading pre-built binary..."
+    get_download_url
 
-    if [ "$INSTALL_METHOD" = "cargo" ]; then
-        # Clone and build (not on crates.io yet)
-        TMPDIR=$(mktemp -d)
-        info "Cloning repository..."
-        git clone --depth 1 "https://github.com/${REPO}.git" "$TMPDIR/passman" 2>/dev/null
-        info "Building release binary (this may take a few minutes)..."
-        cd "$TMPDIR/passman"
-        cargo build --release -p passman-mcp-server 2>/dev/null
+    TMPDIR=$(mktemp -d)
+    HTTP_CODE=$(curl -fsSL -w "%{http_code}" -o "$TMPDIR/$TARBALL" "$DOWNLOAD_URL" 2>/dev/null) || HTTP_CODE="000"
+
+    if [ "$HTTP_CODE" = "200" ] && [ -f "$TMPDIR/$TARBALL" ]; then
+        info "Extracting..."
+        tar xzf "$TMPDIR/$TARBALL" -C "$TMPDIR"
 
         mkdir -p "$INSTALL_DIR"
-        cp "target/release/$BINARY" "$INSTALL_DIR/$BINARY"
+        cp "$TMPDIR/$BINARY" "$INSTALL_DIR/$BINARY"
         chmod +x "$INSTALL_DIR/$BINARY"
         rm -rf "$TMPDIR"
+        success "Downloaded pre-built binary"
+        return 0
+    else
+        rm -rf "$TMPDIR"
+        warn "No pre-built binary for ${TARGET}"
+        info "Falling back to building from source..."
+        return 1
     fi
 }
 
-install_source() {
-    step "Building from source..."
+install_from_source() {
+    step "Building from source (requires Rust)..."
+
+    if ! command -v cargo &>/dev/null; then
+        if ! command -v rustup &>/dev/null; then
+            info "Installing Rust toolchain..."
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y 2>/dev/null
+            source "$HOME/.cargo/env"
+        fi
+    fi
+
+    if ! command -v cargo &>/dev/null; then
+        warn "Failed to install Rust. Please install manually: https://rustup.rs/"
+        exit 1
+    fi
+
     TMPDIR=$(mktemp -d)
     info "Cloning repository..."
     git clone --depth 1 "https://github.com/${REPO}.git" "$TMPDIR/passman" 2>/dev/null
-
-    if ! command -v cargo &>/dev/null; then
-        warn "Cargo not found. Installing Rust first..."
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y 2>/dev/null
-        source "$HOME/.cargo/env"
-    fi
-
     info "Building release binary (this may take a few minutes)..."
     cd "$TMPDIR/passman"
     cargo build --release -p passman-mcp-server 2>/dev/null
@@ -105,6 +117,7 @@ install_source() {
     cp "target/release/$BINARY" "$INSTALL_DIR/$BINARY"
     chmod +x "$INSTALL_DIR/$BINARY"
     rm -rf "$TMPDIR"
+    success "Built from source"
 }
 
 setup_path() {
@@ -131,6 +144,16 @@ setup_path() {
     fi
 }
 
+verify_install() {
+    BINARY_PATH="$INSTALL_DIR/$BINARY"
+    if [ -x "$BINARY_PATH" ]; then
+        success "Verified: $BINARY_PATH"
+    else
+        warn "Binary not found at $BINARY_PATH"
+        exit 1
+    fi
+}
+
 print_config() {
     BINARY_PATH="$INSTALL_DIR/$BINARY"
 
@@ -140,10 +163,10 @@ print_config() {
     echo ""
     echo -e "  ${BOLD}Configure your AI client:${NC}"
     echo ""
-    echo -e "  ${CYAN}Claude Code:${NC}"
+    echo -e "  ${CYAN}Claude Code (quickest):${NC}"
     echo -e "    claude mcp add --transport stdio passman -- $BINARY_PATH"
     echo ""
-    echo -e "  ${CYAN}Or add to .mcp.json:${NC}"
+    echo -e "  ${CYAN}Or add to .mcp.json / settings:${NC}"
     echo '    {'
     echo '      "mcpServers": {'
     echo '        "passman": {'
@@ -153,8 +176,7 @@ print_config() {
     echo '      }'
     echo '    }'
     echo ""
-    echo -e "  ${CYAN}Cursor / VS Code / Claude Desktop / Windsurf:${NC}"
-    echo -e "    Use the same config above in your editor's MCP settings."
+    echo -e "  ${CYAN}Works with:${NC} Claude Code, Cursor, VS Code, Claude Desktop, Windsurf"
     echo ""
     echo -e "  ${PURPLE}${BOLD}Getting started:${NC}"
     echo -e "    1. Add Passman to your AI client config (above)"
@@ -170,13 +192,12 @@ print_config() {
 # Main
 header
 detect_platform
-check_deps
 
-if [ "$INSTALL_METHOD" = "cargo" ]; then
-    install_cargo
-else
-    install_source
+# Try pre-built binary first, fall back to source
+if ! install_binary; then
+    install_from_source
 fi
 
 setup_path
+verify_install
 print_config

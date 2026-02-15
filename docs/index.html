@@ -1129,15 +1129,15 @@ a:hover{color:var(--cyan)}
 <section class="section install" id="install">
   <div class="container">
     <h2 class="section-title reveal">Installation</h2>
-    <p class="section-sub reveal">Three ways to install. Pick the one that fits your setup.</p>
+    <p class="section-sub reveal">One command. No Rust, no cargo, no cloning. Downloads a pre-built binary for your platform.</p>
 
     <div class="install-grid reveal">
       <div class="install-steps">
         <div class="install-step">
           <div class="install-step-num">1</div>
           <div>
-            <h4>Install Passman</h4>
-            <p>Use the one-line installer, or clone and build manually. Installs the MCP server binary to <code style="color:var(--cyan);background:var(--bg-code);padding:2px 6px;border-radius:4px;font-size:.85em">~/.local/bin/</code></p>
+            <h4>Run the Installer</h4>
+            <p>Downloads a pre-built binary for your platform to <code style="color:var(--cyan);background:var(--bg-code);padding:2px 6px;border-radius:4px;font-size:.85em">~/.local/bin/</code>. No dependencies required.</p>
           </div>
         </div>
         <div class="install-step">
@@ -1170,7 +1170,7 @@ a:hover{color:var(--cyan)}
             <span style="color:var(--green);font-weight:600">Option 1: One-Line Installer (Recommended)</span>
             <button class="code-copy" onclick="copyCode(this)" data-code="curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash">Copy</button>
           </div>
-          <div class="code-body"><span class="cm"># Clones, builds, installs to ~/.local/bin/, updates PATH</span>
+          <div class="code-body"><span class="cm"># Downloads pre-built binary. No Rust required.</span>
 <span class="kw">$</span> curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash</div>
         </div>
 
