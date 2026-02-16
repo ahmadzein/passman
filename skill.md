@@ -28,6 +28,20 @@ Or add to `.mcp.json` in your project:
 
 ---
 
+## Desktop GUI (Optional)
+
+Passman includes a desktop app (Tauri v2 + React) for visual credential management. Download from [GitHub Releases](https://github.com/ahmadzein/passman/releases/latest) or install via CLI:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | GUI=1 bash
+```
+
+The GUI and MCP server share the same vault (`~/.passman/vault.json`).
+
+**Screens:** Unlock, Vault Browser, Credential Editor, Policy Editor, Audit Log, Settings.
+
+---
+
 ## Quick Start
 
 1. **Unlock the vault** with `vault_unlock` (creates a new vault on first use)

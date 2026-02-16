@@ -609,6 +609,61 @@ a:hover{color:var(--cyan)}
 .cross{color:#555;font-weight:700}
 .partial{color:var(--yellow);font-weight:700}
 
+/* ===== DESKTOP APP ===== */
+.desktop-app{background:var(--bg)}
+.download-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:24px;max-width:900px;margin:0 auto 40px;
+}
+.download-card{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:32px 24px;
+  text-align:center;
+  transition:border-color .3s,transform .3s,box-shadow .3s;
+}
+.download-card:hover{
+  border-color:rgba(124,58,237,.3);
+  transform:translateY(-4px);
+  box-shadow:0 12px 40px rgba(0,0,0,.3);
+}
+.download-card .dl-icon{
+  font-size:2.5rem;
+  margin-bottom:16px;
+  display:block;
+}
+.download-card h3{
+  font-size:1.1rem;font-weight:600;
+  color:var(--text-bright);margin-bottom:8px;
+}
+.download-card p{
+  font-size:.85rem;color:var(--text-dim);
+  margin-bottom:20px;line-height:1.5;
+}
+.download-card .dl-links{
+  display:flex;flex-direction:column;gap:8px;
+}
+.download-card .dl-link{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 16px;border-radius:var(--radius-sm);
+  background:var(--purple-glow);
+  color:var(--purple-light);
+  font-size:.85rem;font-weight:500;
+  border:1px solid rgba(124,58,237,.25);
+  transition:all .2s;
+}
+.download-card .dl-link:hover{
+  background:var(--purple);color:#fff;border-color:var(--purple);
+}
+.download-card .dl-link svg{width:16px;height:16px}
+.desktop-cli{
+  max-width:700px;margin:0 auto;
+}
+@media(max-width:700px){
+  .download-grid{grid-template-columns:1fr}
+}
+
 /* ===== CTA ===== */
 .cta{
   background:linear-gradient(180deg,var(--bg) 0%,rgba(124,58,237,.05) 50%,var(--bg) 100%);
@@ -726,6 +781,7 @@ a:hover{color:var(--cyan)}
       <li><a href="#architecture">Architecture</a></li>
       <li><a href="#security">Security</a></li>
       <li><a href="#install">Install</a></li>
+      <li><a href="#desktop-app">Desktop App</a></li>
       <li><a href="#comparison">Compare</a></li>
     </ul>
     <span class="nav-cta-wrap" id="navCtaWrap">
@@ -958,6 +1014,7 @@ a:hover{color:var(--cyan)}
         <h3>Desktop GUI</h3>
         <p>Manage your vault visually with the Tauri v2 + React desktop app. Create, edit, and organize credentials without touching the terminal.</p>
         <span class="feature-tag">Tauri v2 + React</span>
+        <div style="margin-top:12px"><a href="#desktop-app" style="font-size:.85rem;font-weight:500">Download for your platform &rarr;</a></div>
       </div>
 
       <div class="feature-card reveal reveal-delay-1">
@@ -1307,6 +1364,75 @@ a:hover{color:var(--cyan)}
 }</div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DESKTOP APP ===== -->
+<section class="section desktop-app" id="desktop-app">
+  <div class="container">
+    <h2 class="section-title reveal">Desktop App</h2>
+    <p class="section-sub reveal">Manage your vault visually. The desktop app shares the same vault as the MCP server &mdash; changes sync automatically.</p>
+
+    <div class="download-grid reveal">
+      <div class="download-card">
+        <span class="dl-icon">&#63743;</span>
+        <h3>macOS</h3>
+        <p>Universal app for Apple Silicon &amp; Intel Macs</p>
+        <div class="dl-links">
+          <a href="https://github.com/ahmadzein/passman/releases/latest" class="dl-link" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Apple Silicon (.dmg)
+          </a>
+          <a href="https://github.com/ahmadzein/passman/releases/latest" class="dl-link" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Intel (.dmg)
+          </a>
+        </div>
+      </div>
+
+      <div class="download-card">
+        <span class="dl-icon">&#128187;</span>
+        <h3>Windows</h3>
+        <p>64-bit installer for Windows 10+</p>
+        <div class="dl-links">
+          <a href="https://github.com/ahmadzein/passman/releases/latest" class="dl-link" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Installer (.exe)
+          </a>
+          <a href="https://github.com/ahmadzein/passman/releases/latest" class="dl-link" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            MSI Package (.msi)
+          </a>
+        </div>
+      </div>
+
+      <div class="download-card">
+        <span class="dl-icon">&#128039;</span>
+        <h3>Linux</h3>
+        <p>AppImage or .deb for Debian/Ubuntu</p>
+        <div class="dl-links">
+          <a href="https://github.com/ahmadzein/passman/releases/latest" class="dl-link" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            AppImage
+          </a>
+          <a href="https://github.com/ahmadzein/passman/releases/latest" class="dl-link" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Debian Package (.deb)
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="desktop-cli reveal">
+      <div class="code-block">
+        <div class="code-header">
+          <span style="color:var(--green);font-weight:600">Or install via CLI</span>
+          <button class="code-copy" onclick="copyCode(this)" data-code="curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | GUI=1 bash">Copy</button>
+        </div>
+        <div class="code-body"><span class="cm"># Installs MCP server + Desktop GUI in one command</span>
+<span class="kw">$</span> curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | GUI=1 bash</div>
       </div>
     </div>
   </div>

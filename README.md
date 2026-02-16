@@ -297,7 +297,24 @@ passman/
 
 ## Desktop GUI
 
-Build and run the Tauri desktop app:
+A full-featured desktop app for visual credential management, built with Tauri v2 + React. Shares the same vault as the MCP server.
+
+### Download
+
+| Platform | Download |
+|----------|----------|
+| macOS (Apple Silicon) | [Passman_x.x.x_aarch64.dmg](https://github.com/ahmadzein/passman/releases/latest) |
+| macOS (Intel) | [Passman_x.x.x_x64.dmg](https://github.com/ahmadzein/passman/releases/latest) |
+| Windows | [Passman_x.x.x_x64-setup.exe](https://github.com/ahmadzein/passman/releases/latest) |
+| Linux (AppImage) | [Passman_x.x.x_amd64.AppImage](https://github.com/ahmadzein/passman/releases/latest) |
+| Linux (deb) | [Passman_x.x.x_amd64.deb](https://github.com/ahmadzein/passman/releases/latest) |
+
+Or install via the CLI installer:
+```bash
+curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | GUI=1 bash
+```
+
+### Build from Source
 
 ```bash
 cd app
@@ -306,7 +323,11 @@ npm run tauri dev     # Development
 npm run tauri build   # Production build
 ```
 
-Screens: Unlock | Vault Browser | Credential Editor | Policy Editor | Audit Log | Settings
+### Screens
+
+Unlock | Vault Browser | Credential Editor | Policy Editor | Audit Log | Settings
+
+> **Note:** The GUI and MCP server share the same vault at `~/.passman/vault.json`. Changes in one are immediately visible in the other.
 
 ---
 

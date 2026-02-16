@@ -3,9 +3,11 @@ set -euo pipefail
 
 # Passman Installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash
+#        curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | GUI=1 bash
 #
 # Downloads a pre-built binary. No Rust, no cargo, no cloning required.
 # Falls back to building from source if no binary is available for your platform.
+# Set GUI=1 to also install the Desktop GUI app.
 
 REPO="ahmadzein/passman"
 BINARY="passman-mcp-server"
@@ -120,6 +122,112 @@ install_from_source() {
     success "Built from source"
 }
 
+find_gui_asset() {
+    local api_url
+    if [ "$VERSION" = "latest" ]; then
+        api_url="https://api.github.com/repos/${REPO}/releases/latest"
+    else
+        api_url="https://api.github.com/repos/${REPO}/releases/tags/${VERSION}"
+    fi
+
+    local pattern="$1"
+    GUI_ASSET_URL=$(curl -fsSL "$api_url" 2>/dev/null | grep -o "\"browser_download_url\": *\"[^\"]*${pattern}[^\"]*\"" | head -1 | grep -o 'https://[^"]*')
+}
+
+install_gui() {
+    step "Installing Desktop GUI..."
+    local gui_os="$(uname -s)"
+    local gui_arch="$(uname -m)"
+
+    case "$gui_os" in
+        Darwin)
+            # Determine arch pattern for macOS
+            local arch_pattern
+            case "$gui_arch" in
+                arm64|aarch64) arch_pattern="aarch64" ;;
+                x86_64|amd64) arch_pattern="x64" ;;
+                *) warn "Unsupported architecture for GUI: $gui_arch"; return 1 ;;
+            esac
+
+            find_gui_asset "${arch_pattern}\.dmg"
+            if [ -z "${GUI_ASSET_URL:-}" ]; then
+                warn "No macOS GUI build found for $gui_arch"
+                return 1
+            fi
+
+            info "Downloading macOS DMG..."
+            local dmg_path
+            dmg_path=$(mktemp /tmp/passman-gui.XXXXXX.dmg)
+            if ! curl -fsSL -o "$dmg_path" "$GUI_ASSET_URL"; then
+                warn "Failed to download GUI"; rm -f "$dmg_path"; return 1
+            fi
+
+            info "Mounting DMG..."
+            local mount_point
+            mount_point=$(hdiutil attach "$dmg_path" -nobrowse 2>/dev/null | grep -o '/Volumes/.*' | head -1)
+            if [ -z "$mount_point" ]; then
+                warn "Failed to mount DMG"; rm -f "$dmg_path"; return 1
+            fi
+
+            local app_name
+            app_name=$(ls "$mount_point" | grep '\.app$' | head -1)
+            if [ -z "$app_name" ]; then
+                warn "No .app found in DMG"; hdiutil detach "$mount_point" -quiet 2>/dev/null; rm -f "$dmg_path"; return 1
+            fi
+
+            info "Installing $app_name to /Applications..."
+            cp -R "$mount_point/$app_name" "/Applications/$app_name"
+            hdiutil detach "$mount_point" -quiet 2>/dev/null
+            rm -f "$dmg_path"
+            success "Installed /Applications/$app_name"
+            ;;
+
+        Linux)
+            find_gui_asset "\.AppImage"
+            if [ -z "${GUI_ASSET_URL:-}" ]; then
+                warn "No Linux GUI build found"
+                return 1
+            fi
+
+            info "Downloading AppImage..."
+            local appimage_dir="$HOME/.local/bin"
+            mkdir -p "$appimage_dir"
+            local appimage_path="$appimage_dir/Passman.AppImage"
+            if ! curl -fsSL -o "$appimage_path" "$GUI_ASSET_URL"; then
+                warn "Failed to download GUI"; return 1
+            fi
+
+            chmod +x "$appimage_path"
+            success "Installed $appimage_path"
+            ;;
+
+        *)
+            warn "GUI install not supported on $gui_os (download manually from GitHub Releases)"
+            return 1
+            ;;
+    esac
+}
+
+offer_gui_install() {
+    # If GUI=1 is set, install without prompting
+    if [ "${GUI:-0}" = "1" ]; then
+        install_gui
+        return
+    fi
+
+    # Only prompt in interactive terminal (not piped)
+    if [ -t 0 ]; then
+        echo ""
+        echo -e "  ${BOLD}Desktop GUI available!${NC}"
+        echo -n "  Install Passman Desktop GUI too? [y/N] "
+        read -r response
+        case "$response" in
+            [yY]|[yY][eE][sS]) install_gui ;;
+            *) info "Skipping GUI install. You can install later with: GUI=1 bash install.sh" ;;
+        esac
+    fi
+}
+
 setup_path() {
     if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
         warn "$INSTALL_DIR is not in your PATH"
@@ -200,4 +308,5 @@ fi
 
 setup_path
 verify_install
+offer_gui_install
 print_config
