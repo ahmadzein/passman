@@ -81,6 +81,12 @@ install_binary() {
         mkdir -p "$INSTALL_DIR"
         cp "$TMPDIR/$BINARY" "$INSTALL_DIR/$BINARY"
         chmod +x "$INSTALL_DIR/$BINARY"
+
+        # Strip macOS quarantine attribute so Gatekeeper doesn't kill the binary
+        if [ "$(uname -s)" = "Darwin" ] && command -v xattr &>/dev/null; then
+            xattr -cr "$INSTALL_DIR/$BINARY" 2>/dev/null || true
+        fi
+
         rm -rf "$TMPDIR"
         success "Downloaded pre-built binary"
         return 0
@@ -179,6 +185,10 @@ install_gui() {
             cp -R "$mount_point/$app_name" "/Applications/$app_name"
             hdiutil detach "$mount_point" -quiet 2>/dev/null
             rm -f "$dmg_path"
+
+            # Strip quarantine attribute so Gatekeeper doesn't block the app
+            xattr -cr "/Applications/$app_name" 2>/dev/null || true
+
             success "Installed /Applications/$app_name"
             ;;
 
