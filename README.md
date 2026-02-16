@@ -310,6 +310,11 @@ Download from [**GitHub Releases**](https://github.com/ahmadzein/passman/release
 | Windows | `.exe` installer, `.msi` |
 | Linux | `.AppImage`, `.deb`, `.rpm` |
 
+> **macOS:** After installing, run this once to bypass Gatekeeper (the app is not signed with an Apple Developer certificate):
+> ```bash
+> xattr -cr /Applications/Passman.app
+> ```
+
 Or install via the CLI installer:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | GUI=1 bash

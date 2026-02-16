@@ -1429,6 +1429,18 @@ a:hover{color:var(--cyan)}
       </div>
     </div>
 
+    <div class="macos-note reveal" style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:12px;padding:16px 20px;margin-bottom:24px;max-width:680px;margin-left:auto;margin-right:auto">
+      <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:var(--text)"><span style="margin-right:6px">&#63743;</span> macOS users</p>
+      <p style="margin:0 0 10px;font-size:13px;color:var(--text-dim)">The app is not signed with an Apple Developer certificate. After installing, open Terminal and run:</p>
+      <div class="code-block" style="margin:0">
+        <div class="code-header">
+          <span style="color:var(--green);font-weight:600">Remove quarantine</span>
+          <button class="code-copy" onclick="copyCode(this)" data-code="xattr -cr /Applications/Passman.app">Copy</button>
+        </div>
+        <div class="code-body"><span class="kw">$</span> xattr -cr /Applications/Passman.app</div>
+      </div>
+    </div>
+
     <div class="desktop-cli reveal">
       <div class="code-block">
         <div class="code-header">
