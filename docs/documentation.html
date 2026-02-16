@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentation - Passman</title>
+<meta name="description" content="Complete documentation for Passman: the secure credential proxy MCP server. Installation, tools reference, credential types, policy engine, and more.">
+<meta name="theme-color" content="#7c3aed">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+<style>
+/* ===== RESET & BASE ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:        #0a0a0f;
+  --bg-card:   #111118;
+  --bg-card2:  #16161f;
+  --bg-code:   #1a1a26;
+  --border:    #2a2a3a;
+  --text:      #e4e4ef;
+  --text-dim:  #8888a4;
+  --text-bright:#f5f5ff;
+  --purple:    #7c3aed;
+  --purple-light:#a78bfa;
+  --purple-dark:#5b21b6;
+  --purple-glow:rgba(124,58,237,.15);
+  --violet:    #8b5cf6;
+  --indigo:    #6366f1;
+  --cyan:      #22d3ee;
+  --green:     #34d399;
+  --red:       #f87171;
+  --yellow:    #fbbf24;
+  --orange:    #fb923c;
+  --pink:      #f472b6;
+  --radius:    12px;
+  --radius-sm: 8px;
+  --radius-lg: 20px;
+  --font-mono: 'SF Mono','Cascadia Code','Fira Code','JetBrains Mono',ui-monospace,monospace;
+  --font-sans: -apple-system,BlinkMacSystemFont,'Segoe UI','Inter',Roboto,Helvetica,Arial,sans-serif;
+  --nav-h:     64px;
+  --sidebar-w: 260px;
+}
+html{scroll-behavior:smooth;font-size:16px;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font-sans);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+a{color:var(--purple-light);text-decoration:none;transition:color .2s}
+a:hover{color:var(--cyan)}
+
+/* ===== NAVIGATION ===== */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  height:var(--nav-h);
+  display:flex;align-items:center;
+  background:rgba(10,10,15,.95);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav .container{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1200px;margin:0 auto;padding:0 24px}
+.nav-logo{
+  display:flex;align-items:center;gap:10px;
+  font-size:1.25rem;font-weight:700;color:var(--text-bright);
+}
+.nav-logo svg{width:28px;height:28px}
+.nav-links{display:flex;gap:32px;list-style:none}
+.nav-links a{
+  color:var(--text-dim);font-size:.9rem;font-weight:500;
+  transition:color .2s;position:relative;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--text-bright)}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-4px;left:0;right:0;
+  height:2px;background:var(--purple);
+  transform:scaleX(0);transition:transform .2s;border-radius:1px;
+}
+.nav-links a:hover::after,.nav-links a.active::after{transform:scaleX(1)}
+.nav-cta{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 20px;border-radius:100px;
+  background:var(--purple);color:#fff;
+  font-size:.875rem;font-weight:600;
+  transition:background .2s,transform .1s;
+}
+.nav-cta:hover{background:var(--purple-dark);color:#fff;transform:translateY(-1px)}
+.nav-cta svg{width:16px;height:16px}
+
+/* Mobile nav */
+.nav-toggle{display:none;background:none;border:none;color:var(--text);cursor:pointer;padding:8px}
+.nav-toggle svg{width:24px;height:24px}
+@media(max-width:768px){
+  .nav-links,.nav-cta-wrap{
+    display:none;position:fixed;top:var(--nav-h);left:0;right:0;
+    flex-direction:column;align-items:center;gap:24px;
+    padding:40px 24px;
+    background:rgba(10,10,15,.98);
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+    z-index:999;
+  }
+  .nav-links.open{display:flex}
+  .nav-toggle{display:block}
+  .nav-cta-wrap{display:none}
+  .nav-cta-wrap.open{display:flex}
+}
+
+/* ===== DOCS LAYOUT ===== */
+.docs-wrapper{
+  display:flex;
+  padding-top:var(--nav-h);
+  min-height:100vh;
+}
+
+/* ===== SIDEBAR ===== */
+.docs-sidebar{
+  position:fixed;
+  top:var(--nav-h);
+  left:0;
+  width:var(--sidebar-w);
+  height:calc(100vh - var(--nav-h));
+  overflow-y:auto;
+  padding:24px 16px 40px 24px;
+  border-right:1px solid var(--border);
+  background:var(--bg-card);
+  z-index:100;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border) transparent;
+}
+.docs-sidebar::-webkit-scrollbar{width:4px}
+.docs-sidebar::-webkit-scrollbar-track{background:transparent}
+.docs-sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.sidebar-section{margin-bottom:20px}
+.sidebar-section-title{
+  font-size:.7rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--text-dim);
+  margin-bottom:8px;
+  padding-left:10px;
+}
+.sidebar-link{
+  display:block;
+  padding:5px 10px;
+  border-radius:6px;
+  font-size:.84rem;
+  color:var(--text-dim);
+  transition:all .15s;
+  border-left:2px solid transparent;
+  margin-bottom:1px;
+}
+.sidebar-link:hover{color:var(--text-bright);background:rgba(124,58,237,.06)}
+.sidebar-link.active{
+  color:var(--purple-light);
+  background:rgba(124,58,237,.1);
+  border-left-color:var(--purple);
+}
+.sidebar-link.sub{
+  padding-left:22px;
+  font-size:.8rem;
+}
+
+/* Sidebar mobile toggle */
+.sidebar-toggle{
+  display:none;
+  position:fixed;
+  bottom:24px;left:24px;
+  z-index:200;
+  width:48px;height:48px;
+  border-radius:50%;
+  background:var(--purple);
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  box-shadow:0 4px 20px rgba(124,58,237,.4);
+  align-items:center;justify-content:center;
+  font-size:1.2rem;
+}
+
+@media(max-width:1024px){
+  .docs-sidebar{
+    transform:translateX(-100%);
+    transition:transform .3s;
+  }
+  .docs-sidebar.open{transform:translateX(0)}
+  .sidebar-toggle{display:flex}
+  .docs-main{margin-left:0 !important}
+}
+
+/* ===== MAIN CONTENT ===== */
+.docs-main{
+  margin-left:var(--sidebar-w);
+  flex:1;
+  max-width:860px;
+  padding:40px 48px 80px;
+}
+@media(max-width:1200px){
+  .docs-main{padding:32px 24px 60px}
+}
+@media(max-width:768px){
+  .docs-main{padding:24px 16px 60px}
+}
+
+/* ===== TYPOGRAPHY ===== */
+.docs-main h1{
+  font-size:2.2rem;
+  font-weight:800;
+  color:var(--text-bright);
+  letter-spacing:-.02em;
+  margin-bottom:8px;
+}
+.docs-main .subtitle{
+  font-size:1.1rem;
+  color:var(--text-dim);
+  margin-bottom:40px;
+  line-height:1.7;
+}
+.docs-main h2{
+  font-size:1.6rem;
+  font-weight:700;
+  color:var(--text-bright);
+  letter-spacing:-.01em;
+  margin:56px 0 16px;
+  padding-top:24px;
+  border-top:1px solid var(--border);
+}
+.docs-main h2:first-of-type{border-top:none;margin-top:0;padding-top:0}
+.docs-main h3{
+  font-size:1.15rem;
+  font-weight:600;
+  color:var(--text-bright);
+  margin:32px 0 12px;
+}
+.docs-main h4{
+  font-size:1rem;
+  font-weight:600;
+  color:var(--purple-light);
+  margin:24px 0 8px;
+}
+.docs-main p{
+  margin-bottom:14px;
+  line-height:1.7;
+  color:var(--text);
+}
+.docs-main ul,.docs-main ol{
+  margin:0 0 16px 24px;
+  color:var(--text);
+}
+.docs-main li{
+  margin-bottom:6px;
+  line-height:1.6;
+}
+.docs-main li code,.docs-main p code,.docs-main td code{
+  background:var(--bg-code);
+  padding:2px 7px;
+  border-radius:4px;
+  font-size:.85em;
+  font-family:var(--font-mono);
+  color:var(--cyan);
+  border:1px solid rgba(42,42,58,.5);
+}
+.docs-main strong{color:var(--text-bright)}
+
+/* ===== CODE BLOCKS ===== */
+.code-block{
+  background:var(--bg-code);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  margin-bottom:20px;
+}
+.code-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;
+  background:var(--bg-card2);
+  border-bottom:1px solid var(--border);
+  font-size:.75rem;color:var(--text-dim);
+  font-family:var(--font-mono);
+}
+.code-copy{
+  background:none;border:1px solid var(--border);
+  color:var(--text-dim);font-size:.7rem;font-family:var(--font-mono);
+  padding:4px 10px;border-radius:4px;cursor:pointer;
+  transition:all .2s;
+}
+.code-copy:hover{border-color:var(--purple);color:var(--purple-light)}
+.code-body{
+  padding:16px;
+  font-family:var(--font-mono);
+  font-size:.82rem;
+  line-height:1.7;
+  overflow-x:auto;
+  white-space:pre;
+}
+.code-body .kw{color:var(--purple-light)}
+.code-body .str{color:var(--green)}
+.code-body .cm{color:var(--text-dim)}
+.code-body .fn{color:var(--cyan)}
+.code-body .num{color:var(--orange)}
+
+/* ===== TABLES ===== */
+.param-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:20px;
+  font-size:.88rem;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+.param-table thead{background:var(--bg-card2)}
+.param-table th{
+  padding:12px 16px;
+  text-align:left;
+  font-weight:600;
+  color:var(--text-bright);
+  font-size:.8rem;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  border-bottom:1px solid var(--border);
+}
+.param-table td{
+  padding:10px 16px;
+  border-bottom:1px solid rgba(42,42,58,.5);
+  color:var(--text);
+  vertical-align:top;
+  line-height:1.5;
+}
+.param-table tr:last-child td{border-bottom:none}
+.param-table tbody tr:hover{background:rgba(124,58,237,.03)}
+.param-table .required{
+  display:inline-block;
+  padding:1px 6px;
+  border-radius:4px;
+  font-size:.7rem;
+  font-weight:600;
+  background:rgba(248,113,113,.1);
+  color:var(--red);
+  border:1px solid rgba(248,113,113,.2);
+}
+.param-table .optional{
+  display:inline-block;
+  padding:1px 6px;
+  border-radius:4px;
+  font-size:.7rem;
+  font-weight:600;
+  background:rgba(136,136,164,.08);
+  color:var(--text-dim);
+  border:1px solid rgba(136,136,164,.15);
+}
+
+/* ===== CALLOUTS ===== */
+.callout{
+  padding:16px 20px;
+  border-radius:var(--radius);
+  margin-bottom:20px;
+  font-size:.9rem;
+  line-height:1.6;
+}
+.callout-title{
+  font-weight:600;
+  margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.callout.info{
+  background:rgba(99,102,241,.06);
+  border:1px solid rgba(99,102,241,.2);
+}
+.callout.info .callout-title{color:var(--indigo)}
+.callout.warning{
+  background:rgba(251,191,36,.06);
+  border:1px solid rgba(251,191,36,.2);
+}
+.callout.warning .callout-title{color:var(--yellow)}
+.callout.danger{
+  background:rgba(248,113,113,.06);
+  border:1px solid rgba(248,113,113,.2);
+}
+.callout.danger .callout-title{color:var(--red)}
+.callout.success{
+  background:rgba(52,211,153,.06);
+  border:1px solid rgba(52,211,153,.2);
+}
+.callout.success .callout-title{color:var(--green)}
+
+/* ===== TOOL CARD ===== */
+.tool-card{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  margin-bottom:24px;
+}
+.tool-card h4{margin-top:0}
+.tool-card p{font-size:.9rem}
+
+/* ===== FAQ / DETAILS ===== */
+.faq-item{
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:8px;
+  overflow:hidden;
+}
+.faq-item summary{
+  padding:14px 20px;
+  cursor:pointer;
+  font-weight:600;
+  color:var(--text-bright);
+  background:var(--bg-card);
+  transition:background .2s;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::before{
+  content:'+';
+  font-size:1.1rem;
+  font-weight:700;
+  color:var(--purple-light);
+  width:20px;
+  flex-shrink:0;
+  transition:transform .2s;
+}
+.faq-item[open] summary::before{content:'\2212'}
+.faq-item summary:hover{background:var(--bg-card2)}
+.faq-item .faq-body{
+  padding:16px 20px;
+  font-size:.9rem;
+  color:var(--text);
+  line-height:1.7;
+  border-top:1px solid var(--border);
+}
+
+/* ===== GRADIENT TEXT ===== */
+.gradient-text{
+  background:linear-gradient(135deg,var(--purple-light),var(--cyan));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+/* ===== FOOTER ===== */
+.footer{
+  padding:48px 0;
+  border-top:1px solid var(--border);
+  background:var(--bg);
+  margin-left:var(--sidebar-w);
+}
+@media(max-width:1024px){
+  .footer{margin-left:0}
+}
+.footer-inner{
+  display:flex;justify-content:space-between;
+  align-items:center;flex-wrap:wrap;gap:16px;
+  max-width:1200px;margin:0 auto;padding:0 24px;
+}
+.footer-left{display:flex;align-items:center;gap:24px}
+.footer-logo{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--text-bright);font-size:1rem}
+.footer-logo svg{width:22px;height:22px}
+.footer-copy{font-size:.8rem;color:var(--text-dim)}
+.footer-links{display:flex;gap:24px}
+.footer-links a{
+  color:var(--text-dim);font-size:.85rem;
+  display:flex;align-items:center;gap:6px;
+  transition:color .2s;
+}
+.footer-links a:hover{color:var(--text-bright)}
+.footer-links a svg{width:18px;height:18px}
+
+/* ===== SCROLL ANIMATIONS ===== */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ===== SECTION DIVIDER ===== */
+.section-divider{
+  height:1px;
+  background:var(--border);
+  margin:56px 0 0;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAVIGATION ===== -->
+<nav class="nav" id="nav">
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 28 28" fill="none"><rect x="2" y="2" width="24" height="24" rx="6" stroke="currentColor" stroke-width="2" fill="rgba(124,58,237,.15)"/><circle cx="14" cy="12" r="3" fill="currentColor"/><path d="M9 18c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      Passman
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="documentation.html" class="active">Docs</a></li>
+      <li><a href="https://github.com/ahmadzein/passman" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <span class="nav-cta-wrap" id="navCtaWrap">
+      <a href="https://github.com/ahmadzein/passman" class="nav-cta" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </span>
+  </div>
+</nav>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="docs-sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Getting Started</div>
+    <a href="#introduction" class="sidebar-link active">Introduction</a>
+    <a href="#installation" class="sidebar-link">Installation</a>
+    <a href="#configuration" class="sidebar-link">Configuration</a>
+    <a href="#getting-started" class="sidebar-link">Quick Start</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Reference</div>
+    <a href="#tools-reference" class="sidebar-link">Tools Reference</a>
+    <a href="#tools-vault" class="sidebar-link sub">Vault</a>
+    <a href="#tools-discovery" class="sidebar-link sub">Discovery</a>
+    <a href="#tools-storage" class="sidebar-link sub">Storage</a>
+    <a href="#tools-proxies" class="sidebar-link sub">Proxies</a>
+    <a href="#tools-audit" class="sidebar-link sub">Audit</a>
+    <a href="#credential-types" class="sidebar-link">Credential Types</a>
+    <a href="#environments" class="sidebar-link">Environments</a>
+    <a href="#policy-engine" class="sidebar-link">Policy Engine</a>
+    <a href="#output-sanitization" class="sidebar-link">Output Sanitization</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Guides</div>
+    <a href="#desktop-gui" class="sidebar-link">Desktop GUI</a>
+    <a href="#architecture" class="sidebar-link">Architecture</a>
+    <a href="#common-workflows" class="sidebar-link">Common Workflows</a>
+    <a href="#troubleshooting" class="sidebar-link">Troubleshooting</a>
+    <a href="#faq" class="sidebar-link">FAQ</a>
+  </div>
+</aside>
+
+<!-- ===== SIDEBAR TOGGLE (Mobile) ===== -->
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+</button>
+
+<!-- ===== DOCS WRAPPER ===== -->
+<div class="docs-wrapper">
+<main class="docs-main" id="docsMain">
+
+<!-- ==================== 1. INTRODUCTION ==================== -->
+<h1>Passman <span class="gradient-text">Documentation</span></h1>
+<p class="subtitle">Complete reference for the secure credential proxy MCP server. Learn how to install, configure, and use all 14 tools across 4 protocols.</p>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>Passman is a secure credential proxy that lets AI agents use your passwords, API tokens, SSH keys, and other secrets <strong>without ever seeing them</strong>. It implements the Model Context Protocol (MCP), which means it works with any MCP-compatible client: Claude Code, Cursor, VS Code Copilot, Claude Desktop, and Windsurf.</p>
+
+<h3>How It Works</h3>
+<p>Passman sits between the AI agent and your external services. Secrets never appear in the conversation:</p>
+
+<table class="param-table">
+<thead><tr><th>Step</th><th>What Happens</th></tr></thead>
+<tbody>
+<tr><td><strong>1. AI Requests</strong></td><td>The agent calls an MCP tool, referencing a credential by name or UUID</td></tr>
+<tr><td><strong>2. Policy Check</strong></td><td>Passman validates the request against per-credential policies (URL patterns, command patterns, rate limits)</td></tr>
+<tr><td><strong>3. Secret Injection</strong></td><td>The credential is decrypted from the vault and injected into the outbound request server-side</td></tr>
+<tr><td><strong>4. Execute &amp; Scrub</strong></td><td>The request executes and the response is sanitized &mdash; all secret traces removed across 6 encodings</td></tr>
+<tr><td><strong>5. Safe Result</strong></td><td>The AI receives the clean result. Secrets were never visible to the agent.</td></tr>
+</tbody>
+</table>
+
+<h3>Security Model</h3>
+
+<table class="param-table">
+<thead><tr><th>Layer</th><th>Protection</th></tr></thead>
+<tbody>
+<tr><td><strong>No Raw Secret Access</strong></td><td>The MCP protocol never exposes secret values. No <code>read_secret</code> tool exists.</td></tr>
+<tr><td><strong>Output Sanitization</strong></td><td>All proxy responses scrubbed across 6 encoding variants (raw, Base64, URL-encoded, hex, upper hex, partial)</td></tr>
+<tr><td><strong>Policy Engine</strong></td><td>Per-credential rules: URL whitelists, command patterns, read-only SQL, recipient restrictions, rate limits</td></tr>
+<tr><td><strong>Rate Limiting</strong></td><td>Per-credential rate limits prevent runaway usage and abuse</td></tr>
+<tr><td><strong>Audit Trail</strong></td><td>Every operation logged with timestamp, credential, operation type, and outcome</td></tr>
+<tr><td><strong>Memory Safety</strong></td><td>Built in Rust with zeroize for cryptographic memory hygiene. Secrets wiped from RAM after use.</td></tr>
+</tbody>
+</table>
+
+<!-- ==================== 2. INSTALLATION ==================== -->
+<h2 id="installation">Installation</h2>
+
+<h3>One-Line Installer (Recommended)</h3>
+<p>Downloads a pre-built binary for your platform. No Rust toolchain required.</p>
+
+<div class="code-block">
+<div class="code-header">
+  <span>bash</span>
+  <button class="code-copy" onclick="copyCode(this)" data-code="curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash">Copy</button>
+</div>
+<div class="code-body"><span class="kw">$</span> curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash</div>
+</div>
+
+<p>The binary is installed to <code>~/.local/bin/passman-mcp-server</code>.</p>
+
+<h3>Build from Source</h3>
+<p>Requires the <a href="https://rustup.rs" target="_blank" rel="noopener">Rust toolchain</a>.</p>
+
+<div class="code-block">
+<div class="code-header">
+  <span>bash</span>
+  <button class="code-copy" onclick="copyCode(this)" data-code="git clone https://github.com/ahmadzein/passman.git
+cd passman
+cargo build --release -p passman-mcp-server
+cp target/release/passman-mcp-server ~/.local/bin/">Copy</button>
+</div>
+<div class="code-body"><span class="kw">$</span> git clone https://github.com/ahmadzein/passman.git
+<span class="kw">$</span> cd passman
+<span class="kw">$</span> cargo build --release -p passman-mcp-server
+<span class="kw">$</span> cp target/release/passman-mcp-server ~/.local/bin/</div>
+</div>
+
+<h3>Desktop GUI</h3>
+<p>A Tauri v2 + React desktop app for managing your vault visually. Shares the same vault file as the MCP server.</p>
+
+<table class="param-table">
+<thead><tr><th>Platform</th><th>Download</th></tr></thead>
+<tbody>
+<tr><td><strong>macOS (Apple Silicon)</strong></td><td><a href="https://github.com/ahmadzein/passman/releases/download/v0.0.3/Passman_0.0.3_aarch64.dmg" target="_blank" rel="noopener">.dmg (ARM64)</a></td></tr>
+<tr><td><strong>macOS (Intel)</strong></td><td><a href="https://github.com/ahmadzein/passman/releases/download/v0.0.3/Passman_0.0.3_x64.dmg" target="_blank" rel="noopener">.dmg (x64)</a></td></tr>
+<tr><td><strong>Windows</strong></td><td><a href="https://github.com/ahmadzein/passman/releases/download/v0.0.3/Passman_0.0.3_x64-setup.exe" target="_blank" rel="noopener">.exe Installer</a> &middot; <a href="https://github.com/ahmadzein/passman/releases/download/v0.0.3/Passman_0.0.3_x64_en-US.msi" target="_blank" rel="noopener">.msi</a></td></tr>
+<tr><td><strong>Linux</strong></td><td><a href="https://github.com/ahmadzein/passman/releases/download/v0.0.3/Passman_0.0.3_amd64.AppImage" target="_blank" rel="noopener">AppImage</a> &middot; <a href="https://github.com/ahmadzein/passman/releases/download/v0.0.3/Passman_0.0.3_amd64.deb" target="_blank" rel="noopener">.deb</a> &middot; <a href="https://github.com/ahmadzein/passman/releases/download/v0.0.3/Passman-0.0.3-1.x86_64.rpm" target="_blank" rel="noopener">.rpm</a></td></tr>
+</tbody>
+</table>
+
+<div class="callout warning">
+<div class="callout-title">&#63743; macOS Gatekeeper</div>
+<p>The app is not signed with an Apple Developer certificate. After installing, run this in Terminal:</p>
+<div class="code-block" style="margin:8px 0 0">
+<div class="code-header"><span>bash</span><button class="code-copy" onclick="copyCode(this)" data-code="xattr -cr /Applications/Passman.app">Copy</button></div>
+<div class="code-body"><span class="kw">$</span> xattr -cr /Applications/Passman.app</div>
+</div>
+</div>
+
+<h3>Verify Installation</h3>
+<div class="code-block">
+<div class="code-header"><span>bash</span><button class="code-copy" onclick="copyCode(this)" data-code="passman-mcp-server --version">Copy</button></div>
+<div class="code-body"><span class="kw">$</span> passman-mcp-server --version</div>
+</div>
+
+<!-- ==================== 3. CONFIGURATION ==================== -->
+<h2 id="configuration">Configuration</h2>
+<p>Add Passman to your MCP client. Pick your client and paste the config.</p>
+
+<h3>Claude Code</h3>
+<p>Create <code>.mcp.json</code> in your project root, or use the CLI:</p>
+<div class="code-block">
+<div class="code-header"><span>bash</span><button class="code-copy" onclick="copyCode(this)" data-code="claude mcp add --transport stdio passman -- passman-mcp-server">Copy</button></div>
+<div class="code-body"><span class="kw">$</span> claude mcp add --transport stdio passman -- passman-mcp-server</div>
+</div>
+
+<p>Or manually add to <code>.mcp.json</code>:</p>
+<div class="code-block">
+<div class="code-header"><span>.mcp.json</span><button class="code-copy" onclick="copyCode(this)" data-code='{"mcpServers":{"passman":{"command":"passman-mcp-server","args":[]}}}'>Copy</button></div>
+<div class="code-body">{
+  <span class="kw">"mcpServers"</span>: {
+    <span class="kw">"passman"</span>: {
+      <span class="kw">"command"</span>: <span class="str">"passman-mcp-server"</span>,
+      <span class="kw">"args"</span>: []
+    }
+  }
+}</div>
+</div>
+
+<h3>Cursor</h3>
+<div class="code-block">
+<div class="code-header"><span>.cursor/mcp.json</span><button class="code-copy" onclick="copyCode(this)" data-code='{"mcpServers":{"passman":{"command":"passman-mcp-server","args":[]}}}'>Copy</button></div>
+<div class="code-body">{
+  <span class="kw">"mcpServers"</span>: {
+    <span class="kw">"passman"</span>: {
+      <span class="kw">"command"</span>: <span class="str">"passman-mcp-server"</span>,
+      <span class="kw">"args"</span>: []
+    }
+  }
+}</div>
+</div>
+
+<h3>VS Code Copilot</h3>
+<div class="code-block">
+<div class="code-header"><span>.vscode/mcp.json</span><button class="code-copy" onclick="copyCode(this)" data-code='{"servers":{"passman":{"type":"stdio","command":"passman-mcp-server","args":[]}}}'>Copy</button></div>
+<div class="code-body">{
+  <span class="kw">"servers"</span>: {
+    <span class="kw">"passman"</span>: {
+      <span class="kw">"type"</span>: <span class="str">"stdio"</span>,
+      <span class="kw">"command"</span>: <span class="str">"passman-mcp-server"</span>,
+      <span class="kw">"args"</span>: []
+    }
+  }
+}</div>
+</div>
+
+<h3>Claude Desktop</h3>
+<div class="code-block">
+<div class="code-header"><span>claude_desktop_config.json</span><button class="code-copy" onclick="copyCode(this)" data-code='{"mcpServers":{"passman":{"command":"passman-mcp-server","args":[]}}}'>Copy</button></div>
+<div class="code-body">{
+  <span class="kw">"mcpServers"</span>: {
+    <span class="kw">"passman"</span>: {
+      <span class="kw">"command"</span>: <span class="str">"passman-mcp-server"</span>,
+      <span class="kw">"args"</span>: []
+    }
+  }
+}</div>
+</div>
+
+<h3>Windsurf</h3>
+<div class="code-block">
+<div class="code-header"><span>~/.codeium/windsurf/mcp_config.json</span><button class="code-copy" onclick="copyCode(this)" data-code='{"mcpServers":{"passman":{"command":"passman-mcp-server","args":[]}}}'>Copy</button></div>
+<div class="code-body">{
+  <span class="kw">"mcpServers"</span>: {
+    <span class="kw">"passman"</span>: {
+      <span class="kw">"command"</span>: <span class="str">"passman-mcp-server"</span>,
+      <span class="kw">"args"</span>: []
+    }
+  }
+}</div>
+</div>
+
+<!-- ==================== 4. GETTING STARTED ==================== -->
+<h2 id="getting-started">Getting Started</h2>
+<p>Walk through the basic flow: unlock, store, use, lock.</p>
+
+<h3>1. Unlock the Vault</h3>
+<p>On first run, a new vault is created automatically.</p>
+<div class="code-block">
+<div class="code-header"><span>MCP Tool Call</span><button class="code-copy" onclick="copyCode(this)" data-code='vault_unlock(password="your-master-password")'>Copy</button></div>
+<div class="code-body"><span class="fn">vault_unlock</span>(<span class="kw">password</span>=<span class="str">"your-master-password"</span>)
+
+<span class="cm">// Response:</span>
+<span class="str">"Vault unlocked. 0 credentials loaded."</span></div>
+</div>
+
+<h3>2. Store a Credential</h3>
+<div class="code-block">
+<div class="code-header"><span>MCP Tool Call</span><button class="code-copy" onclick="copyCode(this)" data-code='credential_store(
+  name="GitHub API",
+  kind="api_token",
+  environment="production",
+  secret={"token":"ghp_xxxxxxxxxxxx","header_name":"Authorization","prefix":"Bearer "},
+  tags=["github","api"]
+)'>Copy</button></div>
+<div class="code-body"><span class="fn">credential_store</span>(
+  <span class="kw">name</span>=<span class="str">"GitHub API"</span>,
+  <span class="kw">kind</span>=<span class="str">"api_token"</span>,
+  <span class="kw">environment</span>=<span class="str">"production"</span>,
+  <span class="kw">secret</span>={
+    <span class="str">"token"</span>: <span class="str">"ghp_xxxxxxxxxxxx"</span>,
+    <span class="str">"header_name"</span>: <span class="str">"Authorization"</span>,
+    <span class="str">"prefix"</span>: <span class="str">"Bearer "</span>
+  },
+  <span class="kw">tags</span>=[<span class="str">"github"</span>, <span class="str">"api"</span>]
+)
+
+<span class="cm">// Response:</span>
+<span class="str">"Stored: GitHub API [a1b2c3d4-...]"</span></div>
+</div>
+
+<h3>3. Use the Credential</h3>
+<p>The AI agent makes an HTTP request. Passman injects the token and scrubs the response.</p>
+<div class="code-block">
+<div class="code-header"><span>MCP Tool Call</span><button class="code-copy" onclick="copyCode(this)" data-code='http_request(
+  credential_id="a1b2c3d4-...",
+  method="GET",
+  url="https://api.github.com/user"
+)'>Copy</button></div>
+<div class="code-body"><span class="fn">http_request</span>(
+  <span class="kw">credential_id</span>=<span class="str">"a1b2c3d4-..."</span>,
+  <span class="kw">method</span>=<span class="str">"GET"</span>,
+  <span class="kw">url</span>=<span class="str">"https://api.github.com/user"</span>
+)
+
+<span class="cm">// Response (sanitized &mdash; token never visible):</span>
+{
+  <span class="str">"status"</span>: <span class="num">200</span>,
+  <span class="str">"headers"</span>: { <span class="str">"authorization"</span>: <span class="str">"[REDACTED]"</span> },
+  <span class="str">"body"</span>: <span class="str">"{ \"login\": \"username\", \"id\": 12345, ... }"</span>
+}</div>
+</div>
+
+<h3>4. Lock the Vault</h3>
+<div class="code-block">
+<div class="code-header"><span>MCP Tool Call</span><button class="code-copy" onclick="copyCode(this)" data-code="vault_lock()">Copy</button></div>
+<div class="code-body"><span class="fn">vault_lock</span>()
+
+<span class="cm">// Encryption key cleared from memory</span></div>
+</div>
+
+<!-- ==================== 5. TOOLS REFERENCE ==================== -->
+<h2 id="tools-reference">Tools Reference</h2>
+<p>Passman exposes 14 MCP tools across 5 categories.</p>
+
+<!-- 5.1 Vault -->
+<h3 id="tools-vault">Vault Management</h3>
+
+<div class="tool-card">
+<h4>vault_unlock</h4>
+<p>Unlock the vault with the master password. Creates a new vault if none exists.</p>
+<table class="param-table">
+<thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>password</code></td><td>String</td><td><span class="required">required</span></td><td>Master password to unlock the vault</td></tr>
+</tbody>
+</table>
+<p><strong>Output:</strong> Confirmation message with credential count.</p>
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code='vault_unlock(password="my-secret-password")'>Copy</button></div>
+<div class="code-body"><span class="fn">vault_unlock</span>(<span class="kw">password</span>=<span class="str">"my-secret-password"</span>)
+<span class="cm">// "Vault unlocked. 12 credentials loaded."</span></div>
+</div>
+</div>
+
+<div class="tool-card">
+<h4>vault_lock</h4>
+<p>Lock the vault, clearing the encryption key from memory.</p>
+<p><strong>Parameters:</strong> None</p>
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code="vault_lock()">Copy</button></div>
+<div class="code-body"><span class="fn">vault_lock</span>()
+<span class="cm">// "Vault locked."</span></div>
+</div>
+</div>
+
+<div class="tool-card">
+<h4>vault_status</h4>
+<p>Check vault status: locked/unlocked, credential count, environments in use.</p>
+<p><strong>Parameters:</strong> None</p>
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code="vault_status()">Copy</button></div>
+<div class="code-body"><span class="fn">vault_status</span>()
+<span class="cm">// { "locked": false, "credentials": 12, "environments": ["production","staging"] }</span></div>
+</div>
+</div>
+
+<!-- 5.2 Discovery -->
+<h3 id="tools-discovery">Discovery</h3>
+
+<div class="tool-card">
+<h4>credential_list</h4>
+<p>List credentials with optional filters. Never returns secret values.</p>
+<table class="param-table">
+<thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>kind</code></td><td>String</td><td><span class="optional">optional</span></td><td>Filter by kind: <code>password</code>, <code>api_token</code>, <code>ssh_key</code>, <code>ssh_password</code>, <code>database_connection</code>, <code>certificate</code>, <code>smtp_account</code>, <code>custom</code></td></tr>
+<tr><td><code>environment</code></td><td>String</td><td><span class="optional">optional</span></td><td>Filter by environment: <code>local</code>, <code>development</code>, <code>staging</code>, <code>production</code></td></tr>
+<tr><td><code>tag</code></td><td>String</td><td><span class="optional">optional</span></td><td>Filter by tag</td></tr>
+</tbody>
+</table>
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code='credential_list(kind="api_token", environment="production")'>Copy</button></div>
+<div class="code-body"><span class="fn">credential_list</span>(<span class="kw">kind</span>=<span class="str">"api_token"</span>, <span class="kw">environment</span>=<span class="str">"production"</span>)
+<span class="cm">// Returns: [{ id, name, kind, environment, tags, created_at, updated_at }, ...]</span></div>
+</div>
+</div>
+
+<div class="tool-card">
+<h4>credential_search</h4>
+<p>Search credentials by name, tags, or notes. Never returns secret values.</p>
+<table class="param-table">
+<thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>query</code></td><td>String</td><td><span class="required">required</span></td><td>Search query (matches name, tags, notes)</td></tr>
+</tbody>
+</table>
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code='credential_search(query="github")'>Copy</button></div>
+<div class="code-body"><span class="fn">credential_search</span>(<span class="kw">query</span>=<span class="str">"github"</span>)
+<span class="cm">// Returns matching credentials (metadata only, no secrets)</span></div>
+</div>
+</div>
+
+<div class="tool-card">
+<h4>credential_info</h4>
+<p>Get detailed metadata for a credential. Never returns secret values.</p>
+<table class="param-table">
+<thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>id</code></td><td>String</td><td><span class="required">required</span></td><td>Credential UUID</td></tr>
+</tbody>
+</table>
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code='credential_info(id="a1b2c3d4-...")'>Copy</button></div>
+<div class="code-body"><span class="fn">credential_info</span>(<span class="kw">id</span>=<span class="str">"a1b2c3d4-..."</span>)
+<span class="cm">// { id, name, kind, environment, tags, notes, created_at, updated_at }</span></div>
+</div>
+</div>
+
+<!-- 5.3 Storage -->
+<h3 id="tools-storage">Storage</h3>
+
+<div class="tool-card">
+<h4>credential_store</h4>
+<p>Store a new credential in the vault. The <code>secret</code> field structure depends on the credential kind (see <a href="#credential-types">Credential Types</a>).</p>
+<table class="param-table">
+<thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>name</code></td><td>String</td><td><span class="required">required</span></td><td>Human-readable name for the credential</td></tr>
+<tr><td><code>kind</code></td><td>String</td><td><span class="required">required</span></td><td>Credential kind (see <a href="#credential-types">types</a>)</td></tr>
+<tr><td><code>environment</code></td><td>String</td><td><span class="required">required</span></td><td>Environment: <code>local</code>, <code>development</code>, <code>staging</code>, <code>production</code></td></tr>
+<tr><td><code>secret</code></td><td>Object</td><td><span class="required">required</span></td><td>Secret data (structure depends on kind)</td></tr>
+<tr><td><code>tags</code></td><td>String[]</td><td><span class="optional">optional</span></td><td>Tags for categorization</td></tr>
+<tr><td><code>notes</code></td><td>String</td><td><span class="optional">optional</span></td><td>Freeform notes</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tool-card">
+<h4>credential_delete</h4>
+<p>Delete a credential from the vault. Requires explicit confirmation.</p>
+<table class="param-table">
+<thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>id</code></td><td>String</td><td><span class="required">required</span></td><td>Credential UUID to delete</td></tr>
+<tr><td><code>confirm</code></td><td>Boolean</td><td><span class="required">required</span></td><td>Must be <code>true</code> to confirm deletion</td></tr>
+</tbody>
+</table>
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code='credential_delete(id="a1b2c3d4-...", confirm=true)'>Copy</button></div>
+<div class="code-body"><span class="fn">credential_delete</span>(<span class="kw">id</span>=<span class="str">"a1b2c3d4-..."</span>, <span class="kw">confirm</span>=<span class="num">true</span>)</div>
+</div>
+</div>
+
+<!-- 5.4 Proxies -->
+<h3 id="tools-proxies">Protocol Proxies</h3>
+
+<div class="tool-card">
+<h4>http_request</h4>
+<p>Make an HTTP request using a stored credential for authentication. The credential's secret is injected as auth headers and never exposed. Response is sanitized.</p>
+
+<table class="param-table">
+<thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>credential_id</code></td><td>String</td><td><span class="required">required</span></td><td>Credential UUID for authentication</td></tr>
+<tr><td><code>method</code></td><td>String</td><td><span class="required">required</span></td><td><code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, <code>DELETE</code>, <code>HEAD</code></td></tr>
+<tr><td><code>url</code></td><td>String</td><td><span class="required">required</span></td><td>Target URL</td></tr>
+<tr><td><code>headers</code></td><td>Object</td><td><span class="optional">optional</span></td><td>Additional HTTP headers (key-value pairs)</td></tr>
+<tr><td><code>body</code></td><td>String</td><td><span class="optional">optional</span></td><td>Request body</td></tr>
+</tbody>
+</table>
+
+<p><strong>Auth modes</strong> depend on the credential type:</p>
+<ul>
+  <li><strong>api_token</strong> &mdash; Injects <code>header_name: prefix + token</code> (e.g. <code>Authorization: Bearer ghp_xxx</code>)</li>
+  <li><strong>password</strong> &mdash; Uses HTTP Basic Auth (<code>Authorization: Basic base64(user:pass)</code>)</li>
+  <li><strong>custom</strong> &mdash; Injects custom fields as headers</li>
+</ul>
+
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code='http_request(
+  credential_id="a1b2c3d4-...",
+  method="POST",
+  url="https://api.example.com/data",
+  headers={"Content-Type":"application/json"},
+  body="{\"key\":\"value\"}"
+)'>Copy</button></div>
+<div class="code-body"><span class="fn">http_request</span>(
+  <span class="kw">credential_id</span>=<span class="str">"a1b2c3d4-..."</span>,
+  <span class="kw">method</span>=<span class="str">"POST"</span>,
+  <span class="kw">url</span>=<span class="str">"https://api.example.com/data"</span>,
+  <span class="kw">headers</span>={<span class="str">"Content-Type"</span>: <span class="str">"application/json"</span>},
+  <span class="kw">body</span>=<span class="str">"{\"key\":\"value\"}"</span>
+)</div>
+</div>
+</div>
+
+<div class="tool-card">
+<h4>ssh_exec</h4>
+<p>Execute a command on a remote host via SSH. Supports both SSH key and SSH password credentials. Output is sanitized.</p>
+<table class="param-table">
+<thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>credential_id</code></td><td>String</td><td><span class="required">required</span></td><td>Credential UUID (SSH key or SSH password)</td></tr>
+<tr><td><code>command</code></td><td>String</td><td><span class="required">required</span></td><td>Shell command to execute on the remote host</td></tr>
+</tbody>
+</table>
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code='ssh_exec(credential_id="b2c3d4e5-...", command="uptime && df -h")'>Copy</button></div>
+<div class="code-body"><span class="fn">ssh_exec</span>(
+  <span class="kw">credential_id</span>=<span class="str">"b2c3d4e5-..."</span>,
+  <span class="kw">command</span>=<span class="str">"uptime &amp;&amp; df -h"</span>
+)
+<span class="cm">// Returns: stdout, stderr, exit_code (all sanitized)</span></div>
+</div>
+</div>
+
+<div class="tool-card">
+<h4>sql_query</h4>
+<p>Execute a SQL query using a stored database credential. Supports PostgreSQL, MySQL, and SQLite. Results are sanitized. Policy can enforce read-only mode.</p>
+<table class="param-table">
+<thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>credential_id</code></td><td>String</td><td><span class="required">required</span></td><td>Credential UUID (database connection)</td></tr>
+<tr><td><code>query</code></td><td>String</td><td><span class="required">required</span></td><td>SQL query to execute</td></tr>
+<tr><td><code>params</code></td><td>Array</td><td><span class="optional">optional</span></td><td>Positional query parameters for parameterized queries</td></tr>
+</tbody>
+</table>
+
+<div class="callout info">
+<div class="callout-title">Parameterized Queries</div>
+<p>Always use parameterized queries to prevent SQL injection. Use <code>$1</code>, <code>$2</code> placeholders and pass values via <code>params</code>.</p>
+</div>
+
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code='sql_query(
+  credential_id="c3d4e5f6-...",
+  query="SELECT * FROM users WHERE email = $1",
+  params=["user@example.com"]
+)'>Copy</button></div>
+<div class="code-body"><span class="fn">sql_query</span>(
+  <span class="kw">credential_id</span>=<span class="str">"c3d4e5f6-..."</span>,
+  <span class="kw">query</span>=<span class="str">"SELECT * FROM users WHERE email = $1"</span>,
+  <span class="kw">params</span>=[<span class="str">"user@example.com"</span>]
+)
+<span class="cm">// Returns: { columns: [...], rows: [[...], ...] }</span></div>
+</div>
+</div>
+
+<div class="tool-card">
+<h4>send_email</h4>
+<p>Send an email using a stored SMTP credential. Recipients can be restricted by policy.</p>
+<table class="param-table">
+<thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>credential_id</code></td><td>String</td><td><span class="required">required</span></td><td>Credential UUID (SMTP account)</td></tr>
+<tr><td><code>to</code></td><td>String[]</td><td><span class="required">required</span></td><td>Recipient email addresses</td></tr>
+<tr><td><code>subject</code></td><td>String</td><td><span class="required">required</span></td><td>Email subject</td></tr>
+<tr><td><code>body</code></td><td>String</td><td><span class="required">required</span></td><td>Email body (plain text)</td></tr>
+<tr><td><code>cc</code></td><td>String[]</td><td><span class="optional">optional</span></td><td>CC recipients</td></tr>
+<tr><td><code>bcc</code></td><td>String[]</td><td><span class="optional">optional</span></td><td>BCC recipients</td></tr>
+</tbody>
+</table>
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code='send_email(
+  credential_id="d4e5f6g7-...",
+  to=["team@company.com"],
+  subject="Deploy Complete",
+  body="Production deploy finished successfully."
+)'>Copy</button></div>
+<div class="code-body"><span class="fn">send_email</span>(
+  <span class="kw">credential_id</span>=<span class="str">"d4e5f6g7-..."</span>,
+  <span class="kw">to</span>=[<span class="str">"team@company.com"</span>],
+  <span class="kw">subject</span>=<span class="str">"Deploy Complete"</span>,
+  <span class="kw">body</span>=<span class="str">"Production deploy finished successfully."</span>
+)</div>
+</div>
+</div>
+
+<!-- 5.5 Audit -->
+<h3 id="tools-audit">Audit</h3>
+
+<div class="tool-card">
+<h4>audit_log</h4>
+<p>View the audit log of proxy operations. Filter by credential, limit results, or filter by time range.</p>
+<table class="param-table">
+<thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>credential_id</code></td><td>String</td><td><span class="optional">optional</span></td><td>Filter by credential UUID</td></tr>
+<tr><td><code>limit</code></td><td>Integer</td><td><span class="optional">optional</span></td><td>Maximum number of entries to return</td></tr>
+<tr><td><code>since</code></td><td>String</td><td><span class="optional">optional</span></td><td>Only entries after this RFC3339 datetime (e.g. <code>2025-01-15T00:00:00Z</code>)</td></tr>
+</tbody>
+</table>
+<div class="code-block">
+<div class="code-header"><span>Example</span><button class="code-copy" onclick="copyCode(this)" data-code='audit_log(limit=10, since="2025-01-15T00:00:00Z")'>Copy</button></div>
+<div class="code-body"><span class="fn">audit_log</span>(<span class="kw">limit</span>=<span class="num">10</span>, <span class="kw">since</span>=<span class="str">"2025-01-15T00:00:00Z"</span>)
+<span class="cm">// Returns: [{ timestamp, credential_id, credential_name, action, tool, success, details }, ...]</span></div>
+</div>
+</div>
+
+<!-- ==================== 6. CREDENTIAL TYPES ==================== -->
+<h2 id="credential-types">Credential Types</h2>
+<p>Passman supports 8 credential types. Each type has a specific JSON schema for the <code>secret</code> field when storing a credential.</p>
+
+<h3>Password</h3>
+<p>Username/password pairs for web services, APIs, or any login.</p>
+<div class="code-block">
+<div class="code-header"><span>Secret Schema</span><button class="code-copy" onclick="copyCode(this)" data-code='{"username":"admin","password":"s3cret","url":"https://example.com"}'>Copy</button></div>
+<div class="code-body">{
+  <span class="str">"username"</span>: <span class="str">"admin"</span>,         <span class="cm">// required</span>
+  <span class="str">"password"</span>: <span class="str">"s3cret"</span>,        <span class="cm">// required</span>
+  <span class="str">"url"</span>:      <span class="str">"https://example.com"</span>  <span class="cm">// optional</span>
+}</div>
+</div>
+
+<h3>API Token</h3>
+<p>Bearer tokens, API keys, and other token-based authentication.</p>
+<div class="code-block">
+<div class="code-header"><span>Secret Schema</span><button class="code-copy" onclick="copyCode(this)" data-code='{"token":"ghp_xxxx","header_name":"Authorization","prefix":"Bearer "}'>Copy</button></div>
+<div class="code-body">{
+  <span class="str">"token"</span>:       <span class="str">"ghp_xxxx"</span>,        <span class="cm">// required</span>
+  <span class="str">"header_name"</span>: <span class="str">"Authorization"</span>,   <span class="cm">// optional (default: Authorization)</span>
+  <span class="str">"prefix"</span>:      <span class="str">"Bearer "</span>           <span class="cm">// optional (default: Bearer )</span>
+}</div>
+</div>
+
+<h3>SSH Key</h3>
+<p>SSH key-based authentication for remote server access.</p>
+<div class="code-block">
+<div class="code-header"><span>Secret Schema</span><button class="code-copy" onclick="copyCode(this)" data-code='{"username":"deploy","host":"server.example.com","port":22,"private_key":"-----BEGIN OPENSSH PRIVATE KEY-----\n...","passphrase":"optional-passphrase"}'>Copy</button></div>
+<div class="code-body">{
+  <span class="str">"username"</span>:    <span class="str">"deploy"</span>,              <span class="cm">// required</span>
+  <span class="str">"host"</span>:        <span class="str">"server.example.com"</span>,   <span class="cm">// required</span>
+  <span class="str">"port"</span>:        <span class="num">22</span>,                     <span class="cm">// optional (default: 22)</span>
+  <span class="str">"private_key"</span>: <span class="str">"-----BEGIN OPENSSH..."</span>, <span class="cm">// required</span>
+  <span class="str">"passphrase"</span>:  <span class="str">"optional-passphrase"</span>   <span class="cm">// optional</span>
+}</div>
+</div>
+
+<h3>SSH Password</h3>
+<p>SSH password-based authentication for remote server access.</p>
+<div class="code-block">
+<div class="code-header"><span>Secret Schema</span><button class="code-copy" onclick="copyCode(this)" data-code='{"username":"admin","host":"server.example.com","port":22,"password":"s3cret"}'>Copy</button></div>
+<div class="code-body">{
+  <span class="str">"username"</span>: <span class="str">"admin"</span>,              <span class="cm">// required</span>
+  <span class="str">"host"</span>:     <span class="str">"server.example.com"</span>,   <span class="cm">// required</span>
+  <span class="str">"port"</span>:     <span class="num">22</span>,                     <span class="cm">// optional (default: 22)</span>
+  <span class="str">"password"</span>: <span class="str">"s3cret"</span>                <span class="cm">// required</span>
+}</div>
+</div>
+
+<h3>Database Connection</h3>
+<p>Connection credentials for PostgreSQL, MySQL, or SQLite databases.</p>
+<div class="code-block">
+<div class="code-header"><span>Secret Schema</span><button class="code-copy" onclick="copyCode(this)" data-code='{"driver":"postgres","host":"db.example.com","port":5432,"database":"myapp","username":"app","password":"dbpass","params":{"sslmode":"require"}}'>Copy</button></div>
+<div class="code-body">{
+  <span class="str">"driver"</span>:   <span class="str">"postgres"</span>,          <span class="cm">// required: "postgres" | "mysql" | "sqlite"</span>
+  <span class="str">"host"</span>:     <span class="str">"db.example.com"</span>,     <span class="cm">// required</span>
+  <span class="str">"port"</span>:     <span class="num">5432</span>,                 <span class="cm">// optional (default varies by driver)</span>
+  <span class="str">"database"</span>: <span class="str">"myapp"</span>,              <span class="cm">// required</span>
+  <span class="str">"username"</span>: <span class="str">"app"</span>,                <span class="cm">// required</span>
+  <span class="str">"password"</span>: <span class="str">"dbpass"</span>,             <span class="cm">// required</span>
+  <span class="str">"params"</span>:   {<span class="str">"sslmode"</span>: <span class="str">"require"</span>} <span class="cm">// optional</span>
+}</div>
+</div>
+
+<h3>Certificate</h3>
+<p>PEM-encoded certificates and private keys for mutual TLS or client certificate authentication.</p>
+<div class="code-block">
+<div class="code-header"><span>Secret Schema</span><button class="code-copy" onclick="copyCode(this)" data-code='{"cert_pem":"-----BEGIN CERTIFICATE-----\n...","key_pem":"-----BEGIN PRIVATE KEY-----\n...","ca_pem":"-----BEGIN CERTIFICATE-----\n..."}'>Copy</button></div>
+<div class="code-body">{
+  <span class="str">"cert_pem"</span>: <span class="str">"-----BEGIN CERTIFICATE-----..."</span>, <span class="cm">// required</span>
+  <span class="str">"key_pem"</span>:  <span class="str">"-----BEGIN PRIVATE KEY-----..."</span>,  <span class="cm">// required</span>
+  <span class="str">"ca_pem"</span>:   <span class="str">"-----BEGIN CERTIFICATE-----..."</span>  <span class="cm">// optional (CA certificate)</span>
+}</div>
+</div>
+
+<h3>SMTP Account</h3>
+<p>SMTP server credentials for sending email.</p>
+<div class="code-block">
+<div class="code-header"><span>Secret Schema</span><button class="code-copy" onclick="copyCode(this)" data-code='{"host":"smtp.gmail.com","port":587,"username":"user@gmail.com","password":"app-password","encryption":"start_tls"}'>Copy</button></div>
+<div class="code-body">{
+  <span class="str">"host"</span>:       <span class="str">"smtp.gmail.com"</span>,   <span class="cm">// required</span>
+  <span class="str">"port"</span>:       <span class="num">587</span>,                 <span class="cm">// optional (default: 587)</span>
+  <span class="str">"username"</span>:   <span class="str">"user@gmail.com"</span>,    <span class="cm">// required</span>
+  <span class="str">"password"</span>:   <span class="str">"app-password"</span>,      <span class="cm">// required</span>
+  <span class="str">"encryption"</span>: <span class="str">"start_tls"</span>          <span class="cm">// optional: "none" | "start_tls" | "tls"</span>
+}</div>
+</div>
+
+<h3>Custom</h3>
+<p>Arbitrary key-value pairs for credentials that don't fit other types.</p>
+<div class="code-block">
+<div class="code-header"><span>Secret Schema</span><button class="code-copy" onclick="copyCode(this)" data-code='{"fields":{"api_key":"xxx","account_id":"12345","region":"us-east-1"}}'>Copy</button></div>
+<div class="code-body">{
+  <span class="str">"fields"</span>: {                      <span class="cm">// required</span>
+    <span class="str">"api_key"</span>:    <span class="str">"xxx"</span>,
+    <span class="str">"account_id"</span>: <span class="str">"12345"</span>,
+    <span class="str">"region"</span>:     <span class="str">"us-east-1"</span>
+  }
+}</div>
+</div>
+
+<!-- ==================== 7. ENVIRONMENTS ==================== -->
+<h2 id="environments">Environments</h2>
+<p>Every credential is tagged with an environment for organizational purposes.</p>
+
+<table class="param-table">
+<thead><tr><th>Environment</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>local</code></td><td>Local development machine</td></tr>
+<tr><td><code>development</code></td><td>Shared development / sandbox environment</td></tr>
+<tr><td><code>staging</code></td><td>Pre-production staging environment</td></tr>
+<tr><td><code>production</code></td><td>Live production environment</td></tr>
+</tbody>
+</table>
+
+<p>Use environments to filter credentials with <code>credential_list</code> and to organize your vault when you have credentials for the same service across different environments.</p>
+
+<!-- ==================== 8. POLICY ENGINE ==================== -->
+<h2 id="policy-engine">Policy Engine</h2>
+<p>The policy engine provides per-credential access controls. When policy patterns are specified, unmatched requests are <strong>denied by default</strong>.</p>
+
+<h3>Policy Fields</h3>
+
+<table class="param-table">
+<thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>allowed_tools</code></td><td>String[]</td><td>Which MCP tools can use this credential (e.g. <code>["http_request"]</code>)</td></tr>
+<tr><td><code>http_url_patterns</code></td><td>String[]</td><td>URL glob patterns allowed for HTTP requests (e.g. <code>["https://api.github.com/*"]</code>)</td></tr>
+<tr><td><code>ssh_command_patterns</code></td><td>String[]</td><td>Command glob patterns allowed for SSH (e.g. <code>["ls *", "cat *"]</code>)</td></tr>
+<tr><td><code>sql_allow_write</code></td><td>Boolean</td><td>If <code>false</code> (default), blocks INSERT, UPDATE, DELETE, DROP, ALTER, CREATE, TRUNCATE, REPLACE, MERGE</td></tr>
+<tr><td><code>smtp_allowed_recipients</code></td><td>String[]</td><td>Email glob patterns for allowed recipients (e.g. <code>["*@company.com"]</code>)</td></tr>
+<tr><td><code>rate_limit</code></td><td>Object</td><td><code>{ "max_requests": 100, "window_secs": 3600 }</code> &mdash; sliding window rate limit</td></tr>
+</tbody>
+</table>
+
+<div class="callout info">
+<div class="callout-title">Pattern Matching</div>
+<p>All patterns use glob-style matching with <code>*</code> as wildcard. Example: <code>https://api.github.com/*</code> matches any path under that domain. If no patterns are specified for a category, all requests for that category are allowed.</p>
+</div>
+
+<h3>Full Policy Example</h3>
+<div class="code-block">
+<div class="code-header"><span>Policy JSON</span><button class="code-copy" onclick="copyCode(this)" data-code='{
+  "allowed_tools": ["http_request", "credential_info"],
+  "http_url_patterns": ["https://api.github.com/*", "https://api.example.com/*"],
+  "ssh_command_patterns": [],
+  "sql_allow_write": false,
+  "smtp_allowed_recipients": ["*@company.com"],
+  "rate_limit": {
+    "max_requests": 100,
+    "window_secs": 3600
+  }
+}'>Copy</button></div>
+<div class="code-body">{
+  <span class="str">"allowed_tools"</span>: [<span class="str">"http_request"</span>, <span class="str">"credential_info"</span>],
+  <span class="str">"http_url_patterns"</span>: [
+    <span class="str">"https://api.github.com/*"</span>,
+    <span class="str">"https://api.example.com/*"</span>
+  ],
+  <span class="str">"ssh_command_patterns"</span>: [],
+  <span class="str">"sql_allow_write"</span>: <span class="num">false</span>,
+  <span class="str">"smtp_allowed_recipients"</span>: [<span class="str">"*@company.com"</span>],
+  <span class="str">"rate_limit"</span>: {
+    <span class="str">"max_requests"</span>: <span class="num">100</span>,
+    <span class="str">"window_secs"</span>: <span class="num">3600</span>
+  }
+}</div>
+</div>
+
+<h3>SQL Read-Only Enforcement</h3>
+<p>When <code>sql_allow_write</code> is <code>false</code>, the following SQL statements are blocked:</p>
+<ul>
+  <li><code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code></li>
+  <li><code>DROP</code>, <code>ALTER</code>, <code>CREATE</code></li>
+  <li><code>TRUNCATE</code>, <code>REPLACE</code>, <code>MERGE</code></li>
+</ul>
+
+<!-- ==================== 9. OUTPUT SANITIZATION ==================== -->
+<h2 id="output-sanitization">Output Sanitization</h2>
+<p>Every proxy response is scrubbed to ensure secrets cannot leak back to the AI agent, even if the external service echoes them.</p>
+
+<h3>Encoding Variants</h3>
+<p>For each secret value (4+ characters), the sanitizer checks and replaces across 6 encoding variants:</p>
+
+<table class="param-table">
+<thead><tr><th>#</th><th>Encoding</th><th>Example</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><strong>Raw</strong></td><td><code>my-secret-token</code></td></tr>
+<tr><td>2</td><td><strong>Base64 (Standard)</strong></td><td><code>bXktc2VjcmV0LXRva2Vu</code></td></tr>
+<tr><td>3</td><td><strong>Base64 (URL-safe)</strong></td><td><code>bXktc2VjcmV0LXRva2Vu</code></td></tr>
+<tr><td>4</td><td><strong>URL-encoded</strong></td><td><code>my-secret-token</code> (percent-encoded if special chars)</td></tr>
+<tr><td>5</td><td><strong>Hex (lowercase)</strong></td><td><code>6d792d7365637265742d746f6b656e</code></td></tr>
+<tr><td>6</td><td><strong>Hex (uppercase)</strong></td><td><code>6D792D7365637265742D746F6B656E</code></td></tr>
+</tbody>
+</table>
+
+<div class="callout warning">
+<div class="callout-title">Minimum Threshold</div>
+<p>Secrets shorter than 4 characters are not sanitized to avoid false positives with common words or values.</p>
+</div>
+
+<h3>What Gets Sanitized</h3>
+<table class="param-table">
+<thead><tr><th>Proxy</th><th>Sanitized Output</th></tr></thead>
+<tbody>
+<tr><td><strong>http_request</strong></td><td>Response body and response headers</td></tr>
+<tr><td><strong>ssh_exec</strong></td><td>stdout and stderr</td></tr>
+<tr><td><strong>sql_query</strong></td><td>Query result values</td></tr>
+<tr><td><strong>send_email</strong></td><td>Status messages</td></tr>
+</tbody>
+</table>
+
+<p>All matched values are replaced with <code>[REDACTED]</code>.</p>
+
+<!-- ==================== 10. DESKTOP GUI ==================== -->
+<h2 id="desktop-gui">Desktop GUI</h2>
+<p>The desktop app provides a visual interface for managing your Passman vault. Built with Tauri v2 and React, it shares the same vault file as the MCP server &mdash; changes sync automatically.</p>
+
+<h3>Screens</h3>
+<table class="param-table">
+<thead><tr><th>Screen</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><strong>Unlock</strong></td><td>Master password entry. Creates a new vault on first run.</td></tr>
+<tr><td><strong>Vault Browser</strong></td><td>List, search, and filter all credentials. Displays metadata only &mdash; no secrets shown.</td></tr>
+<tr><td><strong>Credential Editor</strong></td><td>Create and edit credentials with form fields matching each credential type's schema.</td></tr>
+<tr><td><strong>Policy Editor</strong></td><td>Configure per-credential policies: URL patterns, command patterns, rate limits.</td></tr>
+<tr><td><strong>Audit Log</strong></td><td>Browse and filter the audit trail of all proxy operations.</td></tr>
+<tr><td><strong>Settings</strong></td><td>Configure MCP server auto-install, vault file location, and other preferences.</td></tr>
+</tbody>
+</table>
+
+<h3>MCP Auto-Install</h3>
+<p>The desktop GUI can automatically install the MCP server configuration for detected AI clients (Claude Code, Cursor, VS Code, Claude Desktop, Windsurf).</p>
+
+<h3>Install via CLI</h3>
+<div class="code-block">
+<div class="code-header"><span>bash</span><button class="code-copy" onclick="copyCode(this)" data-code="curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | GUI=1 bash">Copy</button></div>
+<div class="code-body"><span class="cm"># Installs MCP server + Desktop GUI in one command</span>
+<span class="kw">$</span> curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | GUI=1 bash</div>
+</div>
+
+<h3>Build from Source</h3>
+<div class="code-block">
+<div class="code-header"><span>bash</span><button class="code-copy" onclick="copyCode(this)" data-code="cd gui
+npm install
+npm run tauri build">Copy</button></div>
+<div class="code-body"><span class="kw">$</span> cd gui
+<span class="kw">$</span> npm install
+<span class="kw">$</span> npm run tauri build</div>
+</div>
+
+<!-- ==================== 11. ARCHITECTURE ==================== -->
+<h2 id="architecture">Architecture</h2>
+<p>Passman is a Rust workspace with a layered architecture. Each crate has a single responsibility.</p>
+
+<h3>Crate Structure</h3>
+<table class="param-table">
+<thead><tr><th>Crate</th><th>Responsibility</th></tr></thead>
+<tbody>
+<tr><td><code>passman-vault</code></td><td>Encryption, KDF, credential storage, policy engine, audit log</td></tr>
+<tr><td><code>passman-proxy</code></td><td>HTTP, SSH, SQL, SMTP proxy clients + output sanitizer</td></tr>
+<tr><td><code>passman-mcp-server</code></td><td>MCP protocol implementation, tool definitions, stdio transport</td></tr>
+<tr><td><code>gui/</code></td><td>Tauri v2 + React desktop application</td></tr>
+</tbody>
+</table>
+
+<h3>Tech Stack</h3>
+<table class="param-table">
+<thead><tr><th>Component</th><th>Technology</th></tr></thead>
+<tbody>
+<tr><td>Language</td><td>Rust</td></tr>
+<tr><td>Encryption</td><td>AES-256-GCM (aes-gcm crate)</td></tr>
+<tr><td>Key Derivation</td><td>Argon2id (64 MiB memory, 3 iterations, 4 parallelism)</td></tr>
+<tr><td>HTTP Client</td><td>reqwest (rustls-tls)</td></tr>
+<tr><td>SSH Client</td><td>russh</td></tr>
+<tr><td>SQL Client</td><td>sqlx (PostgreSQL, MySQL, SQLite)</td></tr>
+<tr><td>SMTP Client</td><td>lettre</td></tr>
+<tr><td>MCP Protocol</td><td>rmcp (stdio transport)</td></tr>
+<tr><td>Memory Safety</td><td>zeroize (cryptographic memory hygiene)</td></tr>
+<tr><td>Desktop GUI</td><td>Tauri v2 + React + TypeScript</td></tr>
+</tbody>
+</table>
+
+<h3>File Locations</h3>
+<table class="param-table">
+<thead><tr><th>File</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>~/.passman/vault.enc</code></td><td>Encrypted vault file (AES-256-GCM)</td></tr>
+<tr><td><code>~/.passman/audit.jsonl</code></td><td>Audit log (JSON Lines, append-only)</td></tr>
+</tbody>
+</table>
+
+<!-- ==================== 12. COMMON WORKFLOWS ==================== -->
+<h2 id="common-workflows">Common Workflows</h2>
+
+<h3>Store and Use an API Key</h3>
+<div class="code-block">
+<div class="code-header"><span>Workflow</span><button class="code-copy" onclick="copyCode(this)" data-code='# 1. Store the API key
+credential_store(
+  name="OpenAI API",
+  kind="api_token",
+  environment="production",
+  secret={"token":"sk-...","header_name":"Authorization","prefix":"Bearer "}
+)
+
+# 2. Use it in a request
+http_request(
+  credential_id="<returned-uuid>",
+  method="POST",
+  url="https://api.openai.com/v1/chat/completions",
+  headers={"Content-Type":"application/json"},
+  body="{...}"
+)'>Copy</button></div>
+<div class="code-body"><span class="cm"># 1. Store the API key</span>
+<span class="fn">credential_store</span>(
+  <span class="kw">name</span>=<span class="str">"OpenAI API"</span>,
+  <span class="kw">kind</span>=<span class="str">"api_token"</span>,
+  <span class="kw">environment</span>=<span class="str">"production"</span>,
+  <span class="kw">secret</span>={<span class="str">"token"</span>:<span class="str">"sk-..."</span>, <span class="str">"header_name"</span>:<span class="str">"Authorization"</span>, <span class="str">"prefix"</span>:<span class="str">"Bearer "</span>}
+)
+
+<span class="cm"># 2. Use it in a request</span>
+<span class="fn">http_request</span>(
+  <span class="kw">credential_id</span>=<span class="str">"&lt;returned-uuid&gt;"</span>,
+  <span class="kw">method</span>=<span class="str">"POST"</span>,
+  <span class="kw">url</span>=<span class="str">"https://api.openai.com/v1/chat/completions"</span>,
+  <span class="kw">headers</span>={<span class="str">"Content-Type"</span>: <span class="str">"application/json"</span>},
+  <span class="kw">body</span>=<span class="str">"{...}"</span>
+)</div>
+</div>
+
+<h3>SSH into a Server</h3>
+<div class="code-block">
+<div class="code-header"><span>Workflow</span><button class="code-copy" onclick="copyCode(this)" data-code='# 1. Store SSH credentials
+credential_store(
+  name="Production Server",
+  kind="ssh_key",
+  environment="production",
+  secret={"username":"deploy","host":"prod.example.com","private_key":"-----BEGIN..."}
+)
+
+# 2. Run a command
+ssh_exec(credential_id="<uuid>", command="systemctl status nginx")'>Copy</button></div>
+<div class="code-body"><span class="cm"># 1. Store SSH credentials</span>
+<span class="fn">credential_store</span>(
+  <span class="kw">name</span>=<span class="str">"Production Server"</span>,
+  <span class="kw">kind</span>=<span class="str">"ssh_key"</span>,
+  <span class="kw">environment</span>=<span class="str">"production"</span>,
+  <span class="kw">secret</span>={<span class="str">"username"</span>:<span class="str">"deploy"</span>, <span class="str">"host"</span>:<span class="str">"prod.example.com"</span>, <span class="str">"private_key"</span>:<span class="str">"-----BEGIN..."</span>}
+)
+
+<span class="cm"># 2. Run a command</span>
+<span class="fn">ssh_exec</span>(<span class="kw">credential_id</span>=<span class="str">"&lt;uuid&gt;"</span>, <span class="kw">command</span>=<span class="str">"systemctl status nginx"</span>)</div>
+</div>
+
+<h3>Query a Database</h3>
+<div class="code-block">
+<div class="code-header"><span>Workflow</span><button class="code-copy" onclick="copyCode(this)" data-code='# 1. Store database connection
+credential_store(
+  name="App DB",
+  kind="database_connection",
+  environment="staging",
+  secret={"driver":"postgres","host":"db.example.com","port":5432,"database":"myapp","username":"app","password":"dbpass"}
+)
+
+# 2. Run a query with parameters
+sql_query(
+  credential_id="<uuid>",
+  query="SELECT id, name, email FROM users WHERE active = $1 LIMIT $2",
+  params=[true, 10]
+)'>Copy</button></div>
+<div class="code-body"><span class="cm"># 1. Store database connection</span>
+<span class="fn">credential_store</span>(
+  <span class="kw">name</span>=<span class="str">"App DB"</span>,
+  <span class="kw">kind</span>=<span class="str">"database_connection"</span>,
+  <span class="kw">environment</span>=<span class="str">"staging"</span>,
+  <span class="kw">secret</span>={<span class="str">"driver"</span>:<span class="str">"postgres"</span>, <span class="str">"host"</span>:<span class="str">"db.example.com"</span>, <span class="str">"port"</span>:<span class="num">5432</span>,
+          <span class="str">"database"</span>:<span class="str">"myapp"</span>, <span class="str">"username"</span>:<span class="str">"app"</span>, <span class="str">"password"</span>:<span class="str">"dbpass"</span>}
+)
+
+<span class="cm"># 2. Run a query with parameters</span>
+<span class="fn">sql_query</span>(
+  <span class="kw">credential_id</span>=<span class="str">"&lt;uuid&gt;"</span>,
+  <span class="kw">query</span>=<span class="str">"SELECT id, name, email FROM users WHERE active = $1 LIMIT $2"</span>,
+  <span class="kw">params</span>=[<span class="num">true</span>, <span class="num">10</span>]
+)</div>
+</div>
+
+<h3>Send an Email</h3>
+<div class="code-block">
+<div class="code-header"><span>Workflow</span><button class="code-copy" onclick="copyCode(this)" data-code='# 1. Store SMTP credentials
+credential_store(
+  name="Company SMTP",
+  kind="smtp_account",
+  environment="production",
+  secret={"host":"smtp.gmail.com","port":587,"username":"bot@company.com","password":"app-password","encryption":"start_tls"}
+)
+
+# 2. Send an email
+send_email(
+  credential_id="<uuid>",
+  to=["team@company.com"],
+  subject="Weekly Report",
+  body="Here is this week summary..."
+)'>Copy</button></div>
+<div class="code-body"><span class="cm"># 1. Store SMTP credentials</span>
+<span class="fn">credential_store</span>(
+  <span class="kw">name</span>=<span class="str">"Company SMTP"</span>,
+  <span class="kw">kind</span>=<span class="str">"smtp_account"</span>,
+  <span class="kw">environment</span>=<span class="str">"production"</span>,
+  <span class="kw">secret</span>={<span class="str">"host"</span>:<span class="str">"smtp.gmail.com"</span>, <span class="str">"port"</span>:<span class="num">587</span>,
+          <span class="str">"username"</span>:<span class="str">"bot@company.com"</span>, <span class="str">"password"</span>:<span class="str">"app-password"</span>,
+          <span class="str">"encryption"</span>:<span class="str">"start_tls"</span>}
+)
+
+<span class="cm"># 2. Send an email</span>
+<span class="fn">send_email</span>(
+  <span class="kw">credential_id</span>=<span class="str">"&lt;uuid&gt;"</span>,
+  <span class="kw">to</span>=[<span class="str">"team@company.com"</span>],
+  <span class="kw">subject</span>=<span class="str">"Weekly Report"</span>,
+  <span class="kw">body</span>=<span class="str">"Here is this week summary..."</span>
+)</div>
+</div>
+
+<h3>Review the Audit Trail</h3>
+<div class="code-block">
+<div class="code-header"><span>Workflow</span><button class="code-copy" onclick="copyCode(this)" data-code='# View last 20 operations
+audit_log(limit=20)
+
+# View operations for a specific credential
+audit_log(credential_id="a1b2c3d4-...", limit=50)
+
+# View operations since a date
+audit_log(since="2025-01-01T00:00:00Z")'>Copy</button></div>
+<div class="code-body"><span class="cm"># View last 20 operations</span>
+<span class="fn">audit_log</span>(<span class="kw">limit</span>=<span class="num">20</span>)
+
+<span class="cm"># View operations for a specific credential</span>
+<span class="fn">audit_log</span>(<span class="kw">credential_id</span>=<span class="str">"a1b2c3d4-..."</span>, <span class="kw">limit</span>=<span class="num">50</span>)
+
+<span class="cm"># View operations since a date</span>
+<span class="fn">audit_log</span>(<span class="kw">since</span>=<span class="str">"2025-01-01T00:00:00Z"</span>)</div>
+</div>
+
+<h3>Set Up Policies</h3>
+<p>Policies are set per-credential when storing via the <a href="#desktop-gui">Desktop GUI</a> policy editor, or by including policy rules in the vault configuration.</p>
+<div class="code-block">
+<div class="code-header"><span>Policy Example</span><button class="code-copy" onclick="copyCode(this)" data-code='// Restrict a GitHub token to only github.com API calls, max 100/hour
+{
+  "allowed_tools": ["http_request"],
+  "http_url_patterns": ["https://api.github.com/*"],
+  "rate_limit": { "max_requests": 100, "window_secs": 3600 }
+}'>Copy</button></div>
+<div class="code-body"><span class="cm">// Restrict a GitHub token to only github.com API calls, max 100/hour</span>
+{
+  <span class="str">"allowed_tools"</span>: [<span class="str">"http_request"</span>],
+  <span class="str">"http_url_patterns"</span>: [<span class="str">"https://api.github.com/*"</span>],
+  <span class="str">"rate_limit"</span>: { <span class="str">"max_requests"</span>: <span class="num">100</span>, <span class="str">"window_secs"</span>: <span class="num">3600</span> }
+}</div>
+</div>
+
+<!-- ==================== 13. TROUBLESHOOTING ==================== -->
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+<h3>Common Errors</h3>
+
+<table class="param-table">
+<thead><tr><th>Error</th><th>Cause</th><th>Solution</th></tr></thead>
+<tbody>
+<tr><td><code>Vault is locked</code></td><td>Trying to use tools before unlocking</td><td>Call <code>vault_unlock</code> first</td></tr>
+<tr><td><code>Policy denied</code></td><td>Request doesn't match the credential's policy rules</td><td>Check the credential's policy &mdash; update URL patterns, command patterns, or allowed tools</td></tr>
+<tr><td><code>Rate limit exceeded</code></td><td>Too many requests in the rate limit window</td><td>Wait for the window to reset, or increase the <code>max_requests</code> / <code>window_secs</code></td></tr>
+<tr><td><code>Binary not found</code></td><td><code>passman-mcp-server</code> not in PATH</td><td>Ensure <code>~/.local/bin</code> is in your PATH, or use the full path in MCP config</td></tr>
+<tr><td><code>macOS Gatekeeper block</code></td><td>Unsigned binary quarantined by macOS</td><td>Run: <code>xattr -cr /Applications/Passman.app</code></td></tr>
+<tr><td><code>Connection refused (SSH)</code></td><td>Wrong host, port, or firewall blocking</td><td>Verify host/port in the SSH credential. Check that the remote server allows SSH connections.</td></tr>
+<tr><td><code>SQL: write not allowed</code></td><td><code>sql_allow_write</code> is false in policy</td><td>Set <code>sql_allow_write: true</code> in the credential's policy</td></tr>
+<tr><td><code>Invalid credential kind</code></td><td>Secret fields don't match the kind schema</td><td>Check the <a href="#credential-types">Credential Types</a> section for the correct schema</td></tr>
+</tbody>
+</table>
+
+<h3>Debugging Tips</h3>
+<ul>
+  <li>Use <code>vault_status</code> to check if the vault is unlocked and how many credentials are loaded</li>
+  <li>Use <code>credential_info(id="...")</code> to inspect a credential's metadata (kind, environment, tags)</li>
+  <li>Use <code>audit_log(limit=5)</code> to check recent operations and see if they succeeded</li>
+  <li>If the MCP server doesn't appear in your client, verify the config file path and restart the client</li>
+  <li>Ensure <code>~/.local/bin</code> is in your shell's PATH: add <code>export PATH="$HOME/.local/bin:$PATH"</code> to your <code>~/.bashrc</code> or <code>~/.zshrc</code></li>
+</ul>
+
+<h3>File Permissions</h3>
+<p>The vault file at <code>~/.passman/vault.enc</code> should only be readable by your user:</p>
+<div class="code-block">
+<div class="code-header"><span>bash</span><button class="code-copy" onclick="copyCode(this)" data-code="chmod 600 ~/.passman/vault.enc">Copy</button></div>
+<div class="code-body"><span class="kw">$</span> chmod 600 ~/.passman/vault.enc</div>
+</div>
+
+<!-- ==================== 14. FAQ ==================== -->
+<h2 id="faq">FAQ</h2>
+
+<details class="faq-item">
+<summary>Can AI agents read my passwords?</summary>
+<div class="faq-body">
+<p><strong>No.</strong> Passman has no <code>read_secret</code> tool. AI agents can only reference credentials by name or UUID. The actual secret values are decrypted server-side and injected into outbound requests. Furthermore, all responses are sanitized across 6 encoding variants to prevent accidental leaks.</p>
+</div>
+</details>
+
+<details class="faq-item">
+<summary>Where is my data stored?</summary>
+<div class="faq-body">
+<p>All data is stored locally on your machine:</p>
+<ul>
+  <li><code>~/.passman/vault.enc</code> &mdash; Encrypted vault file</li>
+  <li><code>~/.passman/audit.jsonl</code> &mdash; Audit log</li>
+</ul>
+<p>No cloud sync, no telemetry, no third-party access. Your secrets never leave your machine except when proxied to the target service.</p>
+</div>
+</details>
+
+<details class="faq-item">
+<summary>What encryption is used?</summary>
+<div class="faq-body">
+<p>Passman uses <strong>AES-256-GCM</strong> for encryption with <strong>Argon2id</strong> for key derivation (64 MiB memory, 3 iterations, 4 parallelism). The encryption key is derived from your master password and wiped from memory (using Rust's <code>zeroize</code> crate) when you lock the vault.</p>
+</div>
+</details>
+
+<details class="faq-item">
+<summary>Can multiple AI clients use the same vault?</summary>
+<div class="faq-body">
+<p><strong>Yes.</strong> The vault is a single file on disk. Both the MCP server and the Desktop GUI can access it. However, only one process should write to the vault at a time &mdash; the MCP server and GUI coordinate through file locking.</p>
+</div>
+</details>
+
+<details class="faq-item">
+<summary>What happens if I forget my master password?</summary>
+<div class="faq-body">
+<p>The vault cannot be recovered without the master password. There is no password reset, no recovery key, and no backdoor. This is by design &mdash; it means even if someone obtains your vault file, they cannot access your credentials without the password.</p>
+</div>
+</details>
+
+<details class="faq-item">
+<summary>Is Passman free?</summary>
+<div class="faq-body">
+<p><strong>Yes, free forever.</strong> Passman is open source under the MIT License. No paid tiers, no subscriptions, no usage limits.</p>
+</div>
+</details>
+
+<details class="faq-item">
+<summary>Which MCP clients are supported?</summary>
+<div class="faq-body">
+<p>Any MCP-compatible client that supports stdio transport. Tested with:</p>
+<ul>
+  <li>Claude Code (CLI)</li>
+  <li>Claude Desktop</li>
+  <li>Cursor</li>
+  <li>VS Code Copilot</li>
+  <li>Windsurf</li>
+</ul>
+</div>
+</details>
+
+<details class="faq-item">
+<summary>How do I update Passman?</summary>
+<div class="faq-body">
+<p>Run the installer again. It will download and replace the existing binary:</p>
+<div class="code-block" style="margin:8px 0 0">
+<div class="code-header"><span>bash</span><button class="code-copy" onclick="copyCode(this)" data-code="curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash">Copy</button></div>
+<div class="code-body"><span class="kw">$</span> curl -fsSL https://raw.githubusercontent.com/ahmadzein/passman/main/install.sh | bash</div>
+</div>
+<p style="margin-top:10px">Your vault file is preserved across updates.</p>
+</div>
+</details>
+
+</main>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <div class="footer-logo">
+        <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><rect x="2" y="2" width="24" height="24" rx="6" stroke="currentColor" stroke-width="2" fill="rgba(124,58,237,.15)"/><circle cx="14" cy="12" r="3" fill="currentColor"/><path d="M9 18c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        Passman
+      </div>
+      <span class="footer-copy">MIT License &middot; Free &amp; Open Source</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/ahmadzein/passman" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a href="https://github.com/ahmadzein/passman/issues" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        Issues
+      </a>
+      <a href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ===== MOBILE NAV ===== */
+(function(){
+  var toggle = document.getElementById('navToggle');
+  var links = document.getElementById('navLinks');
+  var ctaWrap = document.getElementById('navCtaWrap');
+  toggle.addEventListener('click', function(){
+    links.classList.toggle('open');
+    if (ctaWrap) ctaWrap.classList.toggle('open');
+  });
+  links.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){
+      links.classList.remove('open');
+      if (ctaWrap) ctaWrap.classList.remove('open');
+    });
+  });
+})();
+
+/* ===== SIDEBAR TOGGLE (Mobile) ===== */
+(function(){
+  var btn = document.getElementById('sidebarToggle');
+  var sidebar = document.getElementById('sidebar');
+  btn.addEventListener('click', function(){
+    sidebar.classList.toggle('open');
+  });
+  // Close sidebar when clicking a link on mobile
+  sidebar.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth <= 1024) {
+        sidebar.classList.remove('open');
+      }
+    });
+  });
+})();
+
+/* ===== SCROLL-SPY ===== */
+(function(){
+  var links = document.querySelectorAll('.sidebar-link');
+  var sections = [];
+  links.forEach(function(link){
+    var id = link.getAttribute('href');
+    if (id && id.startsWith('#')) {
+      var el = document.querySelector(id);
+      if (el) sections.push({ el: el, link: link });
+    }
+  });
+
+  function update() {
+    var scrollY = window.scrollY + 100;
+    var current = null;
+    for (var i = sections.length - 1; i >= 0; i--) {
+      if (sections[i].el.offsetTop <= scrollY) {
+        current = sections[i];
+        break;
+      }
+    }
+    links.forEach(function(l){ l.classList.remove('active'); });
+    if (current) current.link.classList.add('active');
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function(){
+    if (!ticking) {
+      requestAnimationFrame(function(){
+        update();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+  update();
+})();
+
+/* ===== COPY CODE ===== */
+function copyCode(btn) {
+  var code = btn.getAttribute('data-code');
+  navigator.clipboard.writeText(code).then(function(){
+    var orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.color = '#34d399';
+    btn.style.borderColor = '#34d399';
+    setTimeout(function(){
+      btn.textContent = orig;
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  });
+}
+
+/* ===== SMOOTH SCROLL ===== */
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click', function(e){
+    var target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      var y = target.getBoundingClientRect().top + window.pageYOffset - 80;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+      // Update URL hash
+      history.pushState(null, null, this.getAttribute('href'));
+    }
+  });
+});
+
+/* ===== SCROLL REVEAL ===== */
+(function(){
+  var reveals = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(function(el){ observer.observe(el); });
+})();
+</script>
+</body>
+</html>
