@@ -10,6 +10,7 @@ permissions:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - target: aarch64-apple-darwin
@@ -53,6 +54,7 @@ jobs:
 
   build-gui:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - platform: macos-latest

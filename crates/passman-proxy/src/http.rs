@@ -73,11 +73,11 @@ pub async fn execute(
             cert_pem, key_pem, ..
         } => {
             // mTLS: build a new client with the certificate identity
-            let identity = reqwest::Identity::from_pkcs8_pem(
-                cert_pem.as_bytes(),
-                key_pem.as_bytes(),
-            )
-            .map_err(|e| ProxyError::InvalidInput(format!("invalid certificate/key PEM: {e}")))?;
+            let mut pem_bundle = cert_pem.as_bytes().to_vec();
+            pem_bundle.push(b'\n');
+            pem_bundle.extend_from_slice(key_pem.as_bytes());
+            let identity = reqwest::Identity::from_pem(&pem_bundle)
+                .map_err(|e| ProxyError::InvalidInput(format!("invalid certificate/key PEM: {e}")))?;
 
             let tls_client = reqwest::Client::builder()
                 .identity(identity)
