@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicegui/tauri-v2/main/plugins/tauri-plugin-nicegui/schema.json",
   "productName": "Passman",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "identifier": "com.passman.app",
   "build": {
     "frontendDist": "../dist",
