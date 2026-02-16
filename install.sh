@@ -82,9 +82,10 @@ install_binary() {
         cp "$TMPDIR/$BINARY" "$INSTALL_DIR/$BINARY"
         chmod +x "$INSTALL_DIR/$BINARY"
 
-        # Strip macOS quarantine attribute so Gatekeeper doesn't kill the binary
-        if [ "$(uname -s)" = "Darwin" ] && command -v xattr &>/dev/null; then
+        # macOS: strip quarantine and re-sign (cp invalidates adhoc signatures)
+        if [ "$(uname -s)" = "Darwin" ]; then
             xattr -cr "$INSTALL_DIR/$BINARY" 2>/dev/null || true
+            codesign -s - -f "$INSTALL_DIR/$BINARY" 2>/dev/null || true
         fi
 
         rm -rf "$TMPDIR"
@@ -124,6 +125,12 @@ install_from_source() {
     mkdir -p "$INSTALL_DIR"
     cp "target/release/$BINARY" "$INSTALL_DIR/$BINARY"
     chmod +x "$INSTALL_DIR/$BINARY"
+
+    # macOS: re-sign after cp (cp invalidates adhoc code signatures on Apple Silicon)
+    if [ "$(uname -s)" = "Darwin" ]; then
+        codesign -s - -f "$INSTALL_DIR/$BINARY" 2>/dev/null || true
+    fi
+
     rm -rf "$TMPDIR"
     success "Built from source"
 }
