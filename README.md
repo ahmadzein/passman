@@ -301,13 +301,14 @@ A full-featured desktop app for visual credential management, built with Tauri v
 
 ### Download
 
-| Platform | Download |
-|----------|----------|
-| macOS (Apple Silicon) | [Passman_x.x.x_aarch64.dmg](https://github.com/ahmadzein/passman/releases/latest) |
-| macOS (Intel) | [Passman_x.x.x_x64.dmg](https://github.com/ahmadzein/passman/releases/latest) |
-| Windows | [Passman_x.x.x_x64-setup.exe](https://github.com/ahmadzein/passman/releases/latest) |
-| Linux (AppImage) | [Passman_x.x.x_amd64.AppImage](https://github.com/ahmadzein/passman/releases/latest) |
-| Linux (deb) | [Passman_x.x.x_amd64.deb](https://github.com/ahmadzein/passman/releases/latest) |
+Download from [**GitHub Releases**](https://github.com/ahmadzein/passman/releases/latest):
+
+| Platform | Formats |
+|----------|---------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` installer, `.msi` |
+| Linux | `.AppImage`, `.deb`, `.rpm` |
 
 Or install via the CLI installer:
 ```bash
