@@ -229,6 +229,137 @@ async fn policy_delete(
     Ok(vault.delete_policy(uuid).await?)
 }
 
+// ── MCP Server management ──────────────────────────────────────
+
+#[derive(Serialize)]
+struct McpStatus {
+    installed: bool,
+    path: Option<String>,
+}
+
+#[tauri::command]
+async fn check_mcp_installed() -> CmdResult<McpStatus> {
+    // Check PATH first
+    if let Ok(path) = which::which("passman-mcp-server") {
+        return Ok(McpStatus {
+            installed: true,
+            path: Some(path.to_string_lossy().to_string()),
+        });
+    }
+
+    // Fall back to common install locations
+    let home = dirs_next().unwrap_or_default();
+    let candidates = [
+        format!("{}/.local/bin/passman-mcp-server", home),
+        format!("{}/bin/passman-mcp-server", home),
+    ];
+
+    for candidate in &candidates {
+        if std::path::Path::new(candidate).exists() {
+            return Ok(McpStatus {
+                installed: true,
+                path: Some(candidate.clone()),
+            });
+        }
+    }
+
+    Ok(McpStatus {
+        installed: false,
+        path: None,
+    })
+}
+
+#[tauri::command]
+async fn install_mcp_server() -> CmdResult<String> {
+    let target = detect_target()?;
+    let url = format!(
+        "https://github.com/ahmadzein/passman/releases/latest/download/passman-mcp-server-{}.tar.gz",
+        target
+    );
+
+    let home = dirs_next().unwrap_or_default();
+    let install_dir = format!("{}/.local/bin", home);
+    std::fs::create_dir_all(&install_dir).map_err(|e| CommandError {
+        message: format!("Failed to create install directory: {e}"),
+    })?;
+
+    let install_path = format!("{}/passman-mcp-server", install_dir);
+
+    // Download tarball
+    let response = reqwest::blocking::get(&url).map_err(|e| CommandError {
+        message: format!("Download failed: {e}"),
+    })?;
+
+    if !response.status().is_success() {
+        return Err(CommandError {
+            message: format!("Download failed: HTTP {}", response.status()),
+        });
+    }
+
+    let bytes = response.bytes().map_err(|e| CommandError {
+        message: format!("Failed to read response: {e}"),
+    })?;
+
+    // Extract tar.gz
+    let decoder = flate2::read::GzDecoder::new(&bytes[..]);
+    let mut archive = tar::Archive::new(decoder);
+
+    for entry in archive.entries().map_err(|e| CommandError {
+        message: format!("Failed to read archive: {e}"),
+    })? {
+        let mut entry = entry.map_err(|e| CommandError {
+            message: format!("Failed to read archive entry: {e}"),
+        })?;
+
+        let path = entry.path().map_err(|e| CommandError {
+            message: format!("Failed to read entry path: {e}"),
+        })?;
+
+        if path.file_name().and_then(|n| n.to_str()) == Some("passman-mcp-server") {
+            let mut file = std::fs::File::create(&install_path).map_err(|e| CommandError {
+                message: format!("Failed to create binary: {e}"),
+            })?;
+            std::io::copy(&mut entry, &mut file).map_err(|e| CommandError {
+                message: format!("Failed to write binary: {e}"),
+            })?;
+            break;
+        }
+    }
+
+    // chmod +x
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&install_path, std::fs::Permissions::from_mode(0o755))
+            .map_err(|e| CommandError {
+                message: format!("Failed to set permissions: {e}"),
+            })?;
+    }
+
+    Ok(install_path)
+}
+
+fn dirs_next() -> Option<String> {
+    std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
+        .ok()
+}
+
+fn detect_target() -> Result<String, CommandError> {
+    let os = std::env::consts::OS;
+    let arch = std::env::consts::ARCH;
+
+    match (os, arch) {
+        ("macos", "aarch64") => Ok("aarch64-apple-darwin".to_string()),
+        ("macos", "x86_64") => Ok("x86_64-apple-darwin".to_string()),
+        ("linux", "x86_64") => Ok("x86_64-unknown-linux-gnu".to_string()),
+        ("linux", "aarch64") => Ok("aarch64-unknown-linux-gnu".to_string()),
+        _ => Err(CommandError {
+            message: format!("Unsupported platform: {os}/{arch}"),
+        }),
+    }
+}
+
 // ── Helpers ─────────────────────────────────────────────────────
 
 fn parse_uuid(s: &str) -> Result<Uuid, CommandError> {
@@ -272,6 +403,8 @@ pub fn run() {
             policy_get,
             policy_save,
             policy_delete,
+            check_mcp_installed,
+            install_mcp_server,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Passman");

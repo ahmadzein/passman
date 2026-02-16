@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/Rust-1.75%2B-orange.svg)](https://www.rust-lang.org/)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://modelcontextprotocol.io/)
-[![Version](https://img.shields.io/badge/version-0.0.2-green.svg)](https://github.com/ahmadzein/passman/releases/tag/v0.0.2)
+[![Version](https://img.shields.io/badge/version-0.0.3-green.svg)](https://github.com/ahmadzein/passman/releases/tag/v0.0.3)
 
 **Let AI agents *use* your credentials without ever *seeing* them.**
 
