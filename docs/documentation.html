@@ -561,7 +561,7 @@ a:hover{color:var(--cyan)}
 
 <!-- ==================== 1. INTRODUCTION ==================== -->
 <h1>Passman <span class="gradient-text">Documentation</span></h1>
-<p class="subtitle">Complete reference for the secure credential proxy MCP server. Learn how to install, configure, and use all 14 tools across 4 protocols.</p>
+<p class="subtitle">Complete reference for the secure credential proxy MCP server. Learn how to install, configure, and use all 13 tools across 4 protocols.</p>
 
 <h2 id="introduction">Introduction</h2>
 
@@ -804,7 +804,7 @@ cp target/release/passman-mcp-server ~/.local/bin/">Copy</button>
 
 <!-- ==================== 5. TOOLS REFERENCE ==================== -->
 <h2 id="tools-reference">Tools Reference</h2>
-<p>Passman exposes 14 MCP tools across 5 categories.</p>
+<p>Passman exposes 13 MCP tools across 5 categories.</p>
 
 <!-- 5.1 Vault -->
 <h3 id="tools-vault">Vault Management</h3>
@@ -1140,7 +1140,7 @@ cp target/release/passman-mcp-server ~/.local/bin/">Copy</button>
 <div class="code-body">{
   <span class="str">"driver"</span>:   <span class="str">"postgres"</span>,          <span class="cm">// required: "postgres" | "mysql" | "sqlite"</span>
   <span class="str">"host"</span>:     <span class="str">"db.example.com"</span>,     <span class="cm">// required</span>
-  <span class="str">"port"</span>:     <span class="num">5432</span>,                 <span class="cm">// optional (default varies by driver)</span>
+  <span class="str">"port"</span>:     <span class="num">5432</span>,                 <span class="cm">// optional (default: 5432)</span>
   <span class="str">"database"</span>: <span class="str">"myapp"</span>,              <span class="cm">// required</span>
   <span class="str">"username"</span>: <span class="str">"app"</span>,                <span class="cm">// required</span>
   <span class="str">"password"</span>: <span class="str">"dbpass"</span>,             <span class="cm">// required</span>
@@ -1196,6 +1196,7 @@ cp target/release/passman-mcp-server ~/.local/bin/">Copy</button>
 <tr><td><code>development</code></td><td>Shared development / sandbox environment</td></tr>
 <tr><td><code>staging</code></td><td>Pre-production staging environment</td></tr>
 <tr><td><code>production</code></td><td>Live production environment</td></tr>
+<tr><td><code>custom</code></td><td>Any custom string (e.g. <code>"dr-staging"</code>, <code>"eu-west"</code>)</td></tr>
 </tbody>
 </table>
 
@@ -1371,7 +1372,7 @@ npm run tauri build">Copy</button></div>
 <table class="param-table">
 <thead><tr><th>File</th><th>Purpose</th></tr></thead>
 <tbody>
-<tr><td><code>~/.passman/vault.enc</code></td><td>Encrypted vault file (AES-256-GCM)</td></tr>
+<tr><td><code>~/.passman/vault.json</code></td><td>Vault file (credentials encrypted with AES-256-GCM)</td></tr>
 <tr><td><code>~/.passman/audit.jsonl</code></td><td>Audit log (JSON Lines, append-only)</td></tr>
 </tbody>
 </table>
@@ -1574,10 +1575,10 @@ audit_log(since="2025-01-01T00:00:00Z")'>Copy</button></div>
 </ul>
 
 <h3>File Permissions</h3>
-<p>The vault file at <code>~/.passman/vault.enc</code> should only be readable by your user:</p>
+<p>The vault file at <code>~/.passman/vault.json</code> should only be readable by your user:</p>
 <div class="code-block">
-<div class="code-header"><span>bash</span><button class="code-copy" onclick="copyCode(this)" data-code="chmod 600 ~/.passman/vault.enc">Copy</button></div>
-<div class="code-body"><span class="kw">$</span> chmod 600 ~/.passman/vault.enc</div>
+<div class="code-header"><span>bash</span><button class="code-copy" onclick="copyCode(this)" data-code="chmod 600 ~/.passman/vault.json">Copy</button></div>
+<div class="code-body"><span class="kw">$</span> chmod 600 ~/.passman/vault.json</div>
 </div>
 
 <!-- ==================== 14. FAQ ==================== -->
@@ -1595,7 +1596,7 @@ audit_log(since="2025-01-01T00:00:00Z")'>Copy</button></div>
 <div class="faq-body">
 <p>All data is stored locally on your machine:</p>
 <ul>
-  <li><code>~/.passman/vault.enc</code> &mdash; Encrypted vault file</li>
+  <li><code>~/.passman/vault.json</code> &mdash; Encrypted vault file</li>
   <li><code>~/.passman/audit.jsonl</code> &mdash; Audit log</li>
 </ul>
 <p>No cloud sync, no telemetry, no third-party access. Your secrets never leave your machine except when proxied to the target service.</p>
