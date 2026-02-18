@@ -195,7 +195,15 @@ impl ServerHandler for PassmanServer {
             instructions: Some(
                 "Passman is a secure credential proxy. It stores credentials in an encrypted vault \
                  and lets you USE them via proxy tools (HTTP, SSH, SQL, SMTP) without ever seeing \
-                 the raw secrets. Start by calling vault_unlock with your master password."
+                 the raw secrets. Start by calling vault_unlock with your master password.\n\n\
+                 IMPORTANT — ssh_exec tips:\n\
+                 - The SSH channel stays open until all output streams close. Background processes \
+                   (nohup, &) will HANG the connection unless you redirect ALL file descriptors and \
+                   detach from the session.\n\
+                 - To run a background process: \
+                   nohup <cmd> > /tmp/out.log 2>&1 < /dev/null & disown && echo \"Started PID: $!\"\n\
+                 - For long-running commands, prefer: bash -c '...' to ensure clean shell handling.\n\
+                 - To check if a process is running later: pgrep -f <pattern> or cat /tmp/out.log"
                     .to_string(),
             ),
             capabilities: ServerCapabilities::builder().enable_tools().build(),
