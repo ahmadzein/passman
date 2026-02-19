@@ -124,24 +124,33 @@ pub async fn execute(
     let mut stdout_buf = Vec::new();
     let mut stderr_buf = Vec::new();
     let mut exit_code: i32 = -1;
+    let timeout = std::time::Duration::from_secs(120);
 
     loop {
-        let Some(msg) = channel.wait().await else {
-            break;
-        };
+        let msg = tokio::time::timeout(timeout, channel.wait()).await;
         match msg {
-            russh::ChannelMsg::Data { ref data } => {
-                stdout_buf.extend_from_slice(data);
-            }
-            russh::ChannelMsg::ExtendedData { ref data, ext } => {
-                if ext == 1 {
-                    stderr_buf.extend_from_slice(data);
+            Ok(Some(msg)) => match msg {
+                russh::ChannelMsg::Data { ref data } => {
+                    stdout_buf.extend_from_slice(data);
                 }
+                russh::ChannelMsg::ExtendedData { ref data, ext } => {
+                    if ext == 1 {
+                        stderr_buf.extend_from_slice(data);
+                    }
+                }
+                russh::ChannelMsg::ExitStatus { exit_status } => {
+                    exit_code = exit_status as i32;
+                }
+                _ => {}
+            },
+            Ok(None) => break,
+            Err(_) => {
+                // Timeout: collect what we have so far
+                stderr_buf.extend_from_slice(
+                    b"\n[passman: SSH command timed out after 120s - output may be partial]",
+                );
+                break;
             }
-            russh::ChannelMsg::ExitStatus { exit_status } => {
-                exit_code = exit_status as i32;
-            }
-            _ => {}
         }
     }
 
