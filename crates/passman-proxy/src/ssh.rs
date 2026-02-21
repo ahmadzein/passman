@@ -124,19 +124,26 @@ pub async fn execute(
     let mut stdout_buf = Vec::new();
     let mut stderr_buf = Vec::new();
     let mut exit_code: i32 = -1;
-    let timeout = std::time::Duration::from_secs(120);
+
+    // Inactivity timeout: resets every time we receive data.
+    // Commands that keep producing output can run indefinitely.
+    // Commands that go silent for 120s are considered hung.
+    let inactivity = std::time::Duration::from_secs(120);
+    let mut deadline = tokio::time::Instant::now() + inactivity;
 
     loop {
-        let msg = tokio::time::timeout(timeout, channel.wait()).await;
+        let msg = tokio::time::timeout_at(deadline, channel.wait()).await;
         match msg {
             Ok(Some(msg)) => match msg {
                 russh::ChannelMsg::Data { ref data } => {
                     stdout_buf.extend_from_slice(data);
+                    deadline = tokio::time::Instant::now() + inactivity;
                 }
                 russh::ChannelMsg::ExtendedData { ref data, ext } => {
                     if ext == 1 {
                         stderr_buf.extend_from_slice(data);
                     }
+                    deadline = tokio::time::Instant::now() + inactivity;
                 }
                 russh::ChannelMsg::ExitStatus { exit_status } => {
                     exit_code = exit_status as i32;
@@ -145,9 +152,9 @@ pub async fn execute(
             },
             Ok(None) => break,
             Err(_) => {
-                // Timeout: collect what we have so far
+                // No data received for 120s - command is likely hung
                 stderr_buf.extend_from_slice(
-                    b"\n[passman: SSH command timed out after 120s - output may be partial]",
+                    b"\n[passman: SSH command timed out - no output for 120s, output may be partial]",
                 );
                 break;
             }
