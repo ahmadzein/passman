@@ -293,6 +293,7 @@ pub enum AuditAction {
     CredentialSearch,
     CredentialInfo,
     CredentialStore,
+    CredentialUpdate,
     CredentialDelete,
     HttpRequest,
     SshExec,

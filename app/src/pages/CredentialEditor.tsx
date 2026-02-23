@@ -133,19 +133,35 @@ export function CredentialEditor({ onSaved }: CredentialEditorProps) {
     setError("");
 
     try {
-      await invoke("credential_store", {
-        input: {
-          name: name.trim(),
-          kind,
-          environment,
-          tags: tags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean),
-          notes: notes.trim() || null,
-          secret: buildSecretPayload(),
-        },
-      });
+      if (isNew) {
+        await invoke("credential_store", {
+          input: {
+            name: name.trim(),
+            kind,
+            environment,
+            tags: tags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean),
+            notes: notes.trim() || null,
+            secret: buildSecretPayload(),
+          },
+        });
+      } else {
+        await invoke("credential_update", {
+          input: {
+            id,
+            name: name.trim(),
+            environment,
+            tags: tags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean),
+            notes: notes.trim() || null,
+            secret: buildSecretPayload(),
+          },
+        });
+      }
       onSaved();
       navigate("/");
     } catch (err: any) {

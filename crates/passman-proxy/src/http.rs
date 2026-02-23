@@ -124,6 +124,65 @@ pub async fn execute(
                 body: sanitized_body,
             });
         }
+        CredentialSecret::Custom { fields } => {
+            // Custom credentials support an optional "auth_strategy" field:
+            //   "basic"   → HTTP Basic Auth using username/client_id + password/client_secret
+            //   "bearer"  → Bearer token using "token" field
+            //   "headers" → inject each field as a custom header (default)
+            let strategy = fields.get("auth_strategy").map(|s| s.as_str()).unwrap_or("headers");
+            match strategy {
+                "basic" => {
+                    let user = fields
+                        .get("username")
+                        .or_else(|| fields.get("client_id"))
+                        .ok_or_else(|| {
+                            ProxyError::InvalidInput(
+                                "basic auth_strategy requires 'username' or 'client_id' field"
+                                    .to_string(),
+                            )
+                        })?;
+                    let pass = fields
+                        .get("password")
+                        .or_else(|| fields.get("client_secret"))
+                        .ok_or_else(|| {
+                            ProxyError::InvalidInput(
+                                "basic auth_strategy requires 'password' or 'client_secret' field"
+                                    .to_string(),
+                            )
+                        })?;
+                    request = request.basic_auth(user, Some(pass));
+                }
+                "bearer" => {
+                    let token = fields.get("token").ok_or_else(|| {
+                        ProxyError::InvalidInput(
+                            "bearer auth_strategy requires 'token' field".to_string(),
+                        )
+                    })?;
+                    let value = format!("Bearer {token}");
+                    header_map.insert(
+                        HeaderName::from_static("authorization"),
+                        HeaderValue::try_from(&value).map_err(|e| {
+                            ProxyError::InvalidInput(format!("invalid header value: {e}"))
+                        })?,
+                    );
+                }
+                _ => {
+                    // "headers" or any other value: inject each field as a custom header
+                    for (k, v) in fields {
+                        if k == "auth_strategy" {
+                            continue;
+                        }
+                        let name = HeaderName::try_from(k.as_str()).map_err(|e| {
+                            ProxyError::InvalidInput(format!("invalid header name '{k}': {e}"))
+                        })?;
+                        let val = HeaderValue::try_from(v.as_str()).map_err(|e| {
+                            ProxyError::InvalidInput(format!("invalid header value: {e}"))
+                        })?;
+                        header_map.insert(name, val);
+                    }
+                }
+            }
+        }
         _ => {
             return Err(ProxyError::InvalidInput(
                 "credential type not supported for HTTP requests".to_string(),

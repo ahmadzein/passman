@@ -204,6 +204,90 @@ fn get_str(
         .ok_or_else(|| format!("missing required field '{key}'"))
 }
 
+// ── credential_update ────────────────────────────────────────────
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct CredentialUpdateRequest {
+    #[schemars(description = "Credential UUID to update")]
+    pub id: String,
+    #[schemars(description = "New name (optional, keeps current if omitted)")]
+    pub name: Option<String>,
+    #[schemars(description = "New environment (optional)")]
+    pub environment: Option<String>,
+    #[schemars(description = "New tags (optional, replaces all tags)")]
+    pub tags: Option<Vec<String>>,
+    #[schemars(description = "New notes (optional, set to empty string to clear)")]
+    pub notes: Option<String>,
+    #[schemars(
+        description = "New secret data (optional, structure depends on credential kind). Omit to keep current secret."
+    )]
+    pub secret: Option<serde_json::Value>,
+}
+
+pub async fn credential_update(
+    server: &PassmanServer,
+    params: CredentialUpdateRequest,
+) -> Result<CallToolResult, McpError> {
+    let id: uuid::Uuid = params
+        .id
+        .parse()
+        .map_err(|_| McpError::invalid_params("invalid UUID", None))?;
+
+    let environment = params
+        .environment
+        .map(|e| {
+            serde_json::from_value::<Environment>(serde_json::Value::String(e))
+                .map_err(|_| McpError::invalid_params("invalid environment", None))
+        })
+        .transpose()?;
+
+    // If secret is provided, we need the credential's kind to parse it correctly
+    let secret = if let Some(ref secret_val) = params.secret {
+        let meta = server
+            .vault
+            .get_credential_meta(id)
+            .await
+            .map_err(|e| McpError::internal_error(format!("{e}"), None))?;
+        let kind: CredentialKind =
+            meta.kind;
+        let parsed = parse_secret(kind, secret_val)
+            .map_err(|e| McpError::invalid_params(format!("invalid secret: {e}"), None))?;
+        Some(parsed)
+    } else {
+        None
+    };
+
+    let notes_opt = params.notes.map(|n| {
+        if n.is_empty() {
+            None
+        } else {
+            Some(n)
+        }
+    });
+
+    match server
+        .vault
+        .update_credential(
+            id,
+            params.name,
+            environment,
+            params.tags,
+            notes_opt,
+            secret.as_ref(),
+        )
+        .await
+    {
+        Ok(id) => Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "id": id.to_string(),
+                "updated": true,
+            })
+            .to_string(),
+        )])),
+        Err(e) => Ok(CallToolResult::error(vec![Content::text(format!("{e}"))])),
+    }
+}
+
 // ── credential_delete ────────────────────────────────────────────
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]

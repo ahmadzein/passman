@@ -82,6 +82,14 @@ impl PassmanServer {
         tools::storage::credential_store(self, params).await
     }
 
+    #[tool(description = "Update an existing credential in the vault. Pass only the fields you want to change; omitted fields keep their current values.")]
+    async fn credential_update(
+        &self,
+        Parameters(params): Parameters<tools::storage::CredentialUpdateRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::storage::credential_update(self, params).await
+    }
+
     #[tool(description = "Delete a credential from the vault. Requires confirm=true.")]
     async fn credential_delete(
         &self,

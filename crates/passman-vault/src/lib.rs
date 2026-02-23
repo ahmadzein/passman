@@ -205,6 +205,66 @@ impl Vault {
         Ok(id)
     }
 
+    /// Update an existing credential's metadata and/or secret. Returns the credential ID.
+    pub async fn update_credential(
+        &self,
+        id: Uuid,
+        name: Option<String>,
+        environment: Option<Environment>,
+        tags: Option<Vec<String>>,
+        notes: Option<Option<String>>,
+        secret: Option<&CredentialSecret>,
+    ) -> Result<Uuid, VaultError> {
+        let mut inner = self.inner.write().await;
+        let vault_path = inner.vault_path.clone();
+        let audit_path = inner.audit_path.clone();
+
+        let (key, data) = match &mut inner.state {
+            VaultState::Locked => return Err(VaultError::Locked),
+            VaultState::Unlocked { key, data } => (key, data),
+        };
+
+        // Update metadata if any fields provided
+        if name.is_some() || environment.is_some() || tags.is_some() || notes.is_some() {
+            credential::update_credential_meta(
+                data,
+                id,
+                name,
+                environment,
+                tags,
+                notes,
+            )?;
+        }
+
+        // Update secret if provided
+        if let Some(secret) = secret {
+            credential::update_credential_secret(data, key, id, secret)?;
+        }
+
+        let cred_name = data
+            .credentials
+            .iter()
+            .find(|c| c.meta.id == id)
+            .map(|c| c.meta.name.clone());
+
+        storage::save_vault(&vault_path, data)?;
+
+        let _ = audit::append_entry(
+            &audit_path,
+            &AuditEntry {
+                timestamp: chrono::Utc::now(),
+                credential_id: Some(id),
+                credential_name: cred_name,
+                action: AuditAction::CredentialUpdate,
+                tool: "credential_update".to_string(),
+                success: true,
+                details: None,
+            },
+        );
+
+        Ok(id)
+    }
+
     /// Get credential metadata by ID.
     pub async fn get_credential_meta(&self, id: Uuid) -> Result<CredentialMeta, VaultError> {
         let inner = self.inner.read().await;

@@ -148,6 +148,48 @@ async fn credential_store(
     Ok(id.to_string())
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateCredentialInput {
+    pub id: String,
+    pub name: String,
+    pub environment: String,
+    pub tags: Vec<String>,
+    pub notes: Option<String>,
+    pub secret: serde_json::Value,
+}
+
+#[tauri::command]
+async fn credential_update(
+    vault: tauri::State<'_, Vault>,
+    input: UpdateCredentialInput,
+) -> CmdResult<String> {
+    let uuid = parse_uuid(&input.id)?;
+    let env = parse_environment(&input.environment).ok_or_else(|| CommandError {
+        message: format!("invalid environment: {}", input.environment),
+    })?;
+    let secret: CredentialSecret =
+        serde_json::from_value(input.secret).map_err(|e| CommandError {
+            message: format!("invalid secret: {e}"),
+        })?;
+
+    let notes_opt = input.notes.map(|n| {
+        if n.is_empty() { None } else { Some(n) }
+    });
+
+    vault
+        .update_credential(
+            uuid,
+            Some(input.name),
+            Some(env),
+            Some(input.tags),
+            notes_opt,
+            Some(&secret),
+        )
+        .await?;
+    Ok(uuid.to_string())
+}
+
 #[tauri::command]
 async fn credential_delete(vault: tauri::State<'_, Vault>, id: String) -> CmdResult<bool> {
     let uuid = parse_uuid(&id)?;
@@ -398,6 +440,7 @@ pub fn run() {
             credential_info,
             credential_get_secret,
             credential_store,
+            credential_update,
             credential_delete,
             audit_log,
             policy_get,
