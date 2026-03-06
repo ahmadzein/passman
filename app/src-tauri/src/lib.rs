@@ -2,6 +2,7 @@ use passman_types::{
     AuditEntry, CredentialKind, CredentialMeta, CredentialSecret, Environment, PolicyRule,
 };
 use passman_vault::Vault;
+use passman_vault::watcher;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -425,6 +426,18 @@ fn parse_environment(s: &str) -> Option<Environment> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let vault = Vault::with_defaults();
+
+    // Start vault file watcher so GUI stays in sync when MCP server modifies the vault
+    let vault_for_watch = vault.clone();
+    let vault_path = passman_vault::storage::default_vault_path();
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
+        rt.block_on(async {
+            let _handle = watcher::watch_vault(vault_for_watch, vault_path);
+            // Keep the watcher alive for the lifetime of the app
+            tokio::signal::ctrl_c().await.ok();
+        });
+    });
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
