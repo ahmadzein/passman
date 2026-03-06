@@ -430,18 +430,20 @@ pub fn run() {
     // Start vault file watcher so GUI stays in sync when MCP server modifies the vault
     let vault_for_watch = vault.clone();
     let vault_path = passman_vault::storage::default_vault_path();
-    std::thread::spawn(move || {
-        let rt = tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
-        rt.block_on(async {
-            let _handle = watcher::watch_vault(vault_for_watch, vault_path);
-            // Keep the watcher alive for the lifetime of the app
-            tokio::signal::ctrl_c().await.ok();
-        });
-    });
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .manage(vault)
+        .setup(move |_app| {
+            tauri::async_runtime::spawn(async move {
+                let _handle = watcher::watch_vault(vault_for_watch, vault_path);
+                // Keep the watcher alive for the lifetime of the app
+                loop {
+                    tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+                }
+            });
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             vault_exists,
             vault_create,
