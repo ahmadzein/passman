@@ -28,7 +28,7 @@ impl PassmanServer {
 
     // ── Vault Management ─────────────────────────────────────
 
-    #[tool(description = "Unlock the vault with the master password. Creates a new vault if none exists.")]
+    #[tool(description = "Unlock the vault with the master password. MUST be called before any other tool. Creates a new vault if none exists. Returns credential count on success.")]
     async fn vault_unlock(
         &self,
         Parameters(params): Parameters<tools::vault::VaultUnlockRequest>,
@@ -48,7 +48,7 @@ impl PassmanServer {
 
     // ── Credential Discovery ─────────────────────────────────
 
-    #[tool(description = "List credentials with optional filters. Never returns secret values.")]
+    #[tool(description = "List credentials with optional filters by kind, environment, or tag. Returns id, name, kind, environment, tags for each credential. Never returns secret values. Use this to find credential UUIDs for proxy tools.")]
     async fn credential_list(
         &self,
         Parameters(params): Parameters<tools::discovery::CredentialListRequest>,
@@ -74,7 +74,7 @@ impl PassmanServer {
 
     // ── Credential Storage ───────────────────────────────────
 
-    #[tool(description = "Store a new credential in the vault. Supports: password, api_token, ssh_key, database_connection, certificate, smtp_account, custom.")]
+    #[tool(description = "Store a NEW credential in the vault. ALWAYS creates a new entry with a new UUID. To modify an existing credential, use credential_update instead. Supports kinds: password, api_token, ssh_key, ssh_password, database_connection, certificate, smtp_account, custom. The 'secret' field structure depends on the kind (see server instructions for field details).")]
     async fn credential_store(
         &self,
         Parameters(params): Parameters<tools::storage::CredentialStoreRequest>,
@@ -82,7 +82,7 @@ impl PassmanServer {
         tools::storage::credential_store(self, params).await
     }
 
-    #[tool(description = "Update an existing credential in the vault. Pass only the fields you want to change; omitted fields keep their current values.")]
+    #[tool(description = "Update an EXISTING credential by UUID. Pass only the fields you want to change; omitted fields keep their current values. Use this instead of credential_store when modifying credentials to avoid creating duplicates. The secret field structure must match the credential's kind.")]
     async fn credential_update(
         &self,
         Parameters(params): Parameters<tools::storage::CredentialUpdateRequest>,
@@ -100,7 +100,7 @@ impl PassmanServer {
 
     // ── Protocol Proxies ─────────────────────────────────────
 
-    #[tool(description = "Make an HTTP request using a stored credential for authentication. The credential's secret is injected as auth headers and never exposed. Response is sanitized.")]
+    #[tool(description = "Make an HTTP request using a stored credential for authentication. Supports credential types: api_token (Bearer/custom header), password (Basic auth), certificate (mTLS), and custom (with auth_strategy: basic/bearer/headers). The credential's secret is injected as auth headers and NEVER exposed to you. Response body and headers are sanitized to remove any secret values.")]
     async fn http_request(
         &self,
         Parameters(params): Parameters<tools::http::HttpRequestParams>,
@@ -108,7 +108,7 @@ impl PassmanServer {
         tools::http::http_request(self, params).await
     }
 
-    #[tool(description = "Execute a command on a remote host via SSH using a stored credential. Output is sanitized to remove any credential values.")]
+    #[tool(description = "Execute a command on a remote host via SSH using a stored ssh_key or ssh_password credential. Host and port are read from the credential. Output is sanitized. Commands with no output for 120s are timed out. For background processes, redirect ALL file descriptors: nohup cmd > /tmp/out.log 2>&1 < /dev/null & disown")]
     async fn ssh_exec(
         &self,
         Parameters(params): Parameters<tools::ssh::SshExecParams>,
@@ -116,7 +116,7 @@ impl PassmanServer {
         tools::ssh::ssh_exec(self, params).await
     }
 
-    #[tool(description = "Execute a SQL query using a stored database credential. Results are sanitized. Policy can enforce read-only mode.")]
+    #[tool(description = "Execute a SQL query using a stored database_connection credential. Connects using the credential's driver/host/port/database. Returns columns, rows, and rows_affected. Results are sanitized. Supports parameterized queries via the params array. Policy can enforce read-only mode.")]
     async fn sql_query(
         &self,
         Parameters(params): Parameters<tools::sql::SqlQueryParams>,
@@ -124,7 +124,7 @@ impl PassmanServer {
         tools::sql::sql_query(self, params).await
     }
 
-    #[tool(description = "Send an email using a stored SMTP credential. Recipients can be restricted by policy.")]
+    #[tool(description = "Send an email using a stored smtp_account credential. Supports to, cc, bcc recipients. Email body is plain text. The sender address is taken from the credential's username. Recipients can be restricted by policy.")]
     async fn send_email(
         &self,
         Parameters(params): Parameters<tools::smtp::SendEmailParams>,
@@ -203,15 +203,35 @@ impl ServerHandler for PassmanServer {
             instructions: Some(
                 "Passman is a secure credential proxy. It stores credentials in an encrypted vault \
                  and lets you USE them via proxy tools (HTTP, SSH, SQL, SMTP) without ever seeing \
-                 the raw secrets. Start by calling vault_unlock with your master password.\n\n\
-                 IMPORTANT — ssh_exec tips:\n\
-                 - The SSH channel stays open until all output streams close. Background processes \
-                   (nohup, &) will HANG the connection unless you redirect ALL file descriptors and \
-                   detach from the session.\n\
-                 - To run a background process: \
-                   nohup <cmd> > /tmp/out.log 2>&1 < /dev/null & disown && echo \"Started PID: $!\"\n\
-                 - For long-running commands, prefer: bash -c '...' to ensure clean shell handling.\n\
-                 - To check if a process is running later: pgrep -f <pattern> or cat /tmp/out.log"
+                 the raw secrets.\n\n\
+                 ## Getting Started\n\
+                 1. Call vault_unlock with the master password\n\
+                 2. Call credential_list to see available credentials\n\
+                 3. Use proxy tools (http_request, ssh_exec, sql_query, send_email) with credential UUIDs\n\n\
+                 ## Credential Types & Secret Fields\n\
+                 - password: {username, password, url?}\n\
+                 - api_token: {token, header_name?, prefix?} - header_name defaults to 'Authorization', prefix to 'Bearer '\n\
+                 - ssh_key: {username, host, port?, private_key, passphrase?}\n\
+                 - ssh_password: {username, host, port?, password}\n\
+                 - database_connection: {driver, host, port?, database, username, password} - driver: postgres/mysql/sqlite\n\
+                 - certificate: {cert_pem, key_pem, ca_pem?} - for mTLS\n\
+                 - smtp_account: {host, port?, username, password, encryption?} - encryption: tls/start_tls/none\n\
+                 - custom: {fields: {key: value, ...}} - see Custom Auth below\n\n\
+                 ## Custom Auth Strategies (for http_request)\n\
+                 Store a 'custom' credential with an 'auth_strategy' field in the fields map:\n\
+                 - auth_strategy: 'basic' - HTTP Basic Auth using client_id/username + client_secret/password fields\n\
+                 - auth_strategy: 'bearer' - Bearer token using 'token' field\n\
+                 - auth_strategy: 'headers' (default) - each field becomes a custom HTTP header\n\
+                 Example for OAuth: kind=custom, secret={client_id: '...', client_secret: '...', auth_strategy: 'basic'}\n\n\
+                 ## Updating vs Storing Credentials\n\
+                 - credential_store: ALWAYS creates a NEW credential with a new UUID\n\
+                 - credential_update: modifies an EXISTING credential by UUID - use this for edits\n\
+                 Never use credential_store to update - it will create duplicates.\n\n\
+                 ## SSH Tips\n\
+                 - Background processes (nohup, &) will HANG unless you redirect ALL file descriptors: \
+                   nohup <cmd> > /tmp/out.log 2>&1 < /dev/null & disown\n\
+                 - Commands with no output for 120s are timed out automatically.\n\
+                 - To check a background process: pgrep -f <pattern> or cat /tmp/out.log"
                     .to_string(),
             ),
             capabilities: ServerCapabilities::builder().enable_tools().build(),

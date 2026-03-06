@@ -6,15 +6,15 @@ use std::collections::HashMap;
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct HttpRequestParams {
-    #[schemars(description = "Credential UUID for authentication")]
+    #[schemars(description = "Credential UUID for authentication. Supports: api_token (Bearer/custom header), password (Basic auth), certificate (mTLS), custom (with auth_strategy field)")]
     pub credential_id: String,
     #[schemars(description = "HTTP method: GET, POST, PUT, PATCH, DELETE, HEAD")]
     pub method: String,
-    #[schemars(description = "Target URL")]
+    #[schemars(description = "Full target URL including scheme (e.g., https://api.example.com/v1/resource)")]
     pub url: String,
-    #[schemars(description = "Additional HTTP headers")]
+    #[schemars(description = "Additional HTTP headers as key-value pairs. Auth headers are injected automatically from the credential - do NOT set Authorization manually.")]
     pub headers: Option<HashMap<String, String>>,
-    #[schemars(description = "Request body")]
+    #[schemars(description = "Request body (typically JSON string for POST/PUT/PATCH). Set Content-Type header if needed.")]
     pub body: Option<String>,
 }
 

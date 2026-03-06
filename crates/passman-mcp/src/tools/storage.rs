@@ -12,9 +12,9 @@ pub struct CredentialStoreRequest {
     pub name: String,
     #[schemars(description = "Credential kind: password, api_token, ssh_key, ssh_password, database_connection, certificate, smtp_account, custom")]
     pub kind: String,
-    #[schemars(description = "Environment: local, development, staging, production")]
+    #[schemars(description = "Environment: local, development, staging, production, or any custom string")]
     pub environment: String,
-    #[schemars(description = "Secret data (structure depends on kind)")]
+    #[schemars(description = "Secret data object. Structure depends on kind: password={username,password,url?}, api_token={token,header_name?,prefix?}, ssh_key={username,host,port?,private_key,passphrase?}, ssh_password={username,host,port?,password}, database_connection={driver,host,port?,database,username,password}, certificate={cert_pem,key_pem,ca_pem?}, smtp_account={host,port?,username,password,encryption?}, custom={any key-value pairs, add auth_strategy for HTTP auth}")]
     pub secret: serde_json::Value,
     #[schemars(description = "Optional tags for categorization")]
     pub tags: Option<Vec<String>>,
