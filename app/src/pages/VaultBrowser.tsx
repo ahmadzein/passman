@@ -14,6 +14,7 @@ export function VaultBrowser({ onRefresh }: VaultBrowserProps) {
   const [kindFilter, setKindFilter] = useState("");
   const [envFilter, setEnvFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const fetchCredentials = async () => {
     setLoading(true);
@@ -47,8 +48,8 @@ export function VaultBrowser({ onRefresh }: VaultBrowserProps) {
     fetchCredentials();
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Delete credential "${name}"? This cannot be undone.`)) return;
+  const handleDelete = async (id: string) => {
+    setDeleteConfirm(null);
     try {
       await invoke("credential_delete", { id });
       fetchCredentials();
@@ -129,12 +130,58 @@ export function VaultBrowser({ onRefresh }: VaultBrowserProps) {
               <button
                 className="btn btn-danger btn-sm"
                 style={{ marginLeft: 8 }}
-                onClick={() => handleDelete(cred.id, cred.name)}
+                onClick={() => setDeleteConfirm({ id: cred.id, name: cred.name })}
               >
                 Delete
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {deleteConfirm && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setDeleteConfirm(null)}
+        >
+          <div
+            style={{
+              background: "var(--bg-secondary, #1e1e2e)",
+              border: "1px solid var(--border, #333)",
+              borderRadius: 12,
+              padding: 24,
+              maxWidth: 400,
+              width: "90%",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: "0 0 12px" }}>Delete Credential</h3>
+            <p style={{ margin: "0 0 20px", opacity: 0.8 }}>
+              Delete <strong>{deleteConfirm.name}</strong>? This cannot be undone.
+            </p>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setDeleteConfirm(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger btn-sm"
+                onClick={() => handleDelete(deleteConfirm.id)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
